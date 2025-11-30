@@ -104,10 +104,74 @@ google_search_agent = LlmAgent(
     name="google_search_agent",
     model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
     description="Searches for locations for astronomy observations using google search. Also can search for specific info about astronomy observation locations.",
-    instruction="""Use the google_search tool to find locations for astronomy observations around the user's location in a smart way. 
-    Give the list with your findings. Each location should have: name, description (from the source), describe source (blog / forum / Reddit), coordinates super important (latitude, longitude), 
-    When searching for locations suitable for astronomical observations, please use the Google Search Agent to prioritize information and recommendations from specialized astronomy forums, amateur astronomy blogs, and astronomy club websites.
-    For your search use astronomy forums and Reddit posts primarily. It's fine to get 2-5 locations.""",
+    instruction="""
+You are a Search Sub-Agent. Your task is to find 3–6 locations suitable for amateur astronomical observations near the location provided by the senior agent.
+
+Your primary objective is to return a structured result containing all mandatory fields listed below. 
+However, if you discover additional information that could meaningfully improve the user's understanding 
+of the location (e.g., light pollution level, safety notes, practical advice, user reviews, visibility 
+conditions, nearby landmarks, parking details), you may add such information as well.
+
+1. Search Strategy:
+   - Use the Google Search Agent.
+   - Prioritize sources in the following order:
+     1) national astronomy forums;
+     2) international astronomy forums and communities;
+     3) amateur astronomy blogs;
+     4) relevant Reddit threads;
+     5) general web search.
+   - Information must be relevant as of today (the day you receive the request).
+
+2. Task Description:
+   - Find places appropriate for setting up a telescope or known as good observation points.
+   - Optionally include meetups of amateur astronomers or publicly accessible observatories, if relevant.
+
+3. Search Iterations:
+   - After each attempt, review the quality of results.
+   - If needed, refine and repeat the search query.
+   - You may perform up to 6 refinement queries.
+
+4. Mandatory fields in the final output:
+   For each location, include:
+   - (1) The exact source where the information was found.
+   - (2) Latitude and longitude.
+   - (3) A short safety assessment (animals, forest/park conditions, remoteness, etc.).
+   - (4) Accessibility description (car, public transport, pedestrian access). 
+       If the senior agent did not specify the user's travel mode, give a general accessibility note.
+
+5. Optional but encouraged details (add only if useful):
+   - Light pollution level or Bortle class.
+   - Comments from amateur astronomers about the location.
+   - Parking or entrance conditions.
+   - Best observation time windows.
+   - Visibility restrictions (trees, tall buildings, horizon obstruction).
+   - Any relevant context that improves the user's ability to plan an observation.
+
+Your output must contain all mandatory fields, but you may include any additional helpful details 
+you deem relevant and beneficial to the user’s experience.
+
+Example of a well-structured answer:
+
+Location 1 — Park X
+- Coordinates: 48.12345, 2.54321
+- Source: astronomy forum "astroforum.fr", discussion thread “Best stargazing spots near Paris” (2025)
+- Distance from the requested point: approx. 12 km
+- Accessibility:
+  - by car: easy access, small parking area near the north entrance;
+  - on foot: accessible via a lit path, approx. 15–20 minutes from the nearest bus stop.
+- Safety:
+  - the area is forested but includes an open clearing suitable for setting up a telescope;
+  - foxes and beavers have been reported — generally harmless, but may appear;
+  - in warm seasons the tick activity is high — bring repellents.
+- Additional useful information:
+  - forum users mention a convenient spot for setting up a tent;
+  - small campfires are allowed in designated fire rings;
+  - a forestry station nearby increases overall safety;
+  - relatively low light pollution (Bortle 4–5); good visibility of the southern horizon.
+
+All other locations (Location 2, Location 3, etc.) must be described in the same structured way, 
+including all mandatory fields and optional additional helpful details when available.
+""",
     output_key='search_findings',
     tools=[google_search]
 )
@@ -139,7 +203,21 @@ observations. Your primary goal is to locate 3–5 good observation spots around
 2. Next, after receiving the research findings, you MUST call the `astro_weather_agent` tool to get the weather for this locations.
 3. Finally, present the final summary clearly to the user as your response.
 It’s important for interpreting the weather: the cloud cover value returned by the tool ranges from 0 to 9, where 0 means no clouds and a clear sky,
- and 9 means fully overcast. I think that a value around 3 is still acceptable for observations, and anything above 5 may not be great.""",
+ and 9 means fully overcast. I think that a value around 3 is still acceptable for observations, and anything above 5 may not be great.
+ Include soome imortant info from Searc_agent findings that can help user such as location description, source, coordinates, wildlife if its important, possibility of fireplace,
+ Road for car.
+ 
+ Before requesting location search from the Search Sub-Agent, you must ask the user 
+whether they have any preferences or constraints related to transportation or logistics. 
+Examples of such constraints include:
+- whether the user can travel by car or only by public transport,
+- how far they are willing to travel,
+- whether they prefer easily accessible locations,
+- whether they prefer isolated or populated areas,
+- any safety-related concerns or requirements.
+
+Only after receiving the user's clarification should you proceed to formulate the request 
+for the Search Sub-Agent.""",
     # We wrap the sub-agents in `AgentTool` to make them callable tools for the root agent.
     tools=[AgentTool(google_search_agent), AgentTool(astro_weather_agent)],
 )
