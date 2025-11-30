@@ -1,0 +1,602 @@
+{
+  "eval_set_id": "baseline",
+  "name": "baseline",
+  "eval_cases": [
+    {
+      "eval_id": "more or less reasonable answer ",
+      "conversation": [
+        {
+          "invocation_id": "e-a08cd8e6-c8ab-44d9-aa37-f9daecab5c03",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Привет я в Париже "
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Привет! Вот краткое изложение информации о местах для астрономических наблюдений вблизи Парижа и погодные условия для каждого из них:\n\n**1. Лес Фонтенбло (Fontainebleau Forest)**\n*   **Координаты:** 48.4167°N, 2.6667°E\n*   **Описание:** Прекрасный нетронутый участок земли недалеко от Парижа, предлагающий высокие горы и скалы для лучшего обзора ночного неба. Хороший вариант из-за удаленности от городских районов.\n*   **Погода (прогноз на ближайшие часы):**\n    *   Облачность: 9%\n    *   Прозрачность: от 2 до 5 (чем выше, тем лучше)\n    *   Ветер: в основном южный, 2-3 км/ч\n    *   Температура: от 1°C до 7°C\n\n**2. Мон-Валерьен (Mont Valérien)**\n*   **Координаты:** 48.87277°N, 2.21306°E\n*   **Описание:** Рекомендуется из-за беспрепятственного обзора и высоты 161 метр, что отдаляет его от светового загрязнения и делает идеальным для любования звездами.\n*   **Погода:**\n    *   Облачность: 9%\n    *   Прозрачность: 4\n    *   Ветер: СЗ, 3 км/ч\n    *   Температура: 6°C\n\n**3. Парк Жан Мулен ле Гилан (Parc Jean Moulin les Guilands)**\n*   **Координаты:** 48.86228°N, 2.42545°E\n*   **Описание:** Расположенный между Баньоле и Монтрёем, этот парк площадью 25 гектаров описывается как отличное место для любителей астрономии благодаря большому открытому пространству.\n*   **Погода:**\n    *   Облачность: 9%\n    *   Прозрачность: 5\n    *   Ветер: З, 3 м/с\n    *   Температура: 6°C\n\n**4. Парк Бют-дю-Шапо-Руж (Parc de la Butte-du-Chapeau-Rouge)**\n*   **Координаты:** 48.88139°N, 2.39722°E\n*   **Описание:** Этот парк, расположенный на окраине Парижа, рекомендуется для наблюдения за звездами, так как там меньше проблем с городским освещением, и он имеет возвышенности для лучшего обзора.\n*   **Погода:**\n    *   Облачность: 9\n    *   Прозрачность: 5\n    *   Ветер: З 3\n    *   Температура: 6\n    *   Время: 00:00 UTC\n\nУдачных наблюдений!",
+                "thought_signature": "CukCAePx_14tgtXXzfjEdXHtRFiL0nlavhJdXmEkqVP2tG9RJgEsQr4-4yQiU8XEinftBrJmcbPSIV3hIU6yA4-58vMQgsBMw0CkCc_ODqpcarwzo3WIRvPg3c4aVjy-Ztz6kbH_MiJOda4_0m3YMO6-WOfFiMGXZaqIRq0lr2AmU5J1Kgqhi0mlT1jDfkh66CD3MGSO6KTiWyLSV8NfHsclOcHr35B8cQ_RYTIxOAhuG_HUSe1cx19T2eFWBmBhtbky0f9FjC0Xz0KV6kK1jD1KHjIOWmp8kgODHwKPWq9zKaYKsZhGjb8m3IQg1gSj7MJJNG0p42So6JMc_IOXYp_qU0WKjpLPWVi5poXbTzhkc4gGWCtucDpkCKUeZxrah-ZNOrSsE5Mz93p5tW0iYYQyYeYL2oJYmNFQU98vy6vY5DwN9qIiBQWFGx-Wioc-qeV9M20MGclpM73sMSQBNkAQtOA7TYSXC8-1Rw=="
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-66bf9830-6795-416c-8071-41eb71e27f43",
+                        "args": {
+                          "request": "astronomy observation spots near Paris"
+                        },
+                        "name": "google_search_agent"
+                      },
+                      "thought_signature": "CpQDAePx_14aRRpB9j0Db6-rD4qqStCODi-_rTl7GsttJ4F-QuAy3ThEFE0EoD-gkFnIWlEv2PtIgB6Sjqyx1IcI8U_yrT7ECg1TzhTe0DKzfiQCqUKbj8BBhpSdjnllC7zBKMz-kshQlUVUfQjRaSEs-9ItI6qxI_d13l3Z_X3MEGTy_PQBNc1BlmAnDvce0xm9AYVxNHr0HwyXrwS15Hv9gXFysc7FRsuXRmUMRze6HqlVyqeKdKlfyx7No1gENiIh9z5rdDLNMdsfCNTsy-pmCL1kwKi0iJB5mioVap7wVS_2TKuYVlTpbubU9uhuqNuFZ887YNCi29n2EPZuMeeAP0Fp6XiEXWUjT7ofBcJDWrcRgh7FArD4K8GQzijWf1TS7OQIP6hz5J0jnAqe00zp4aIHPdR3dgoze0Q-MU1RfEEv9m6Ge8PW6c7rpMOSgTN25cZ7ODLbmIupOnOtm_HZh5USZGujldg9fNOUSbTLcCHE-SPFBCCa2HKTTl9_uRjKX_vtBgoN0ISrTQEN0Y1y5Thbtiw="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-66bf9830-6795-416c-8071-41eb71e27f43",
+                        "name": "google_search_agent",
+                        "response": {
+                          "result": "Here are some locations near Paris that are recommended for astronomy observations, prioritizing those mentioned in forums and Reddit discussions:\n\n*   **Fontainebleau Forest:** Described as a beautiful patch of untouched land just outside Paris, offering high mountains and cliffs for a better view of the night sky. It's noted as a good option when other choices fail due to its distance from urban areas.\n*   **Parc de la Butte-du-Chapeau-Rouge:** Located near the edge of Paris, this park is recommended for stargazing because the city lights are less of a problem there, and it features elevated spaces for a better view.\n*   **Séverine Square:** Situated in the 20th arrondissement, this park is highlighted as a good stargazing spot because it has fewer street lamps and illuminations, making it darker than other parts of the city.\n*   **Mont Valérien:** This location is recommended for its unobstructed view and a height of 161 meters, placing it further from light pollution and making it ideal for admiring stars.\n*   **Parc Jean Moulin les Guilands:** Located between Bagnolet and Montreuil, this 25-hectare park is described as a great spot for astronomy enthusiasts due to its large open space.\n*   **Limours Plateau:** This is the highest plateau in Essonne, at 181 meters, offering an unobstructed view that is well-suited for astronomy. It's nicknamed the “Tibet of the Île-de-France.”\n\nFor those willing to travel further or seeking specific astronomical sites, other mentions include:\n\n*   **Pic du Midi de Bigorre:** A well-regarded location for astronomy in France.\n*   **Nancay Radio Telescope:** Another site of interest for astronomy enthusiasts.\n*   **Paris Observatory:** Founded in 1667, it's the oldest observatory in the world and features the Arago telescope.\n*   **Cévennes National Park:** Designated an International Dark Sky Reserve, it's known for its lack of light pollution.\n\nIt's worth noting that light pollution is a significant factor for astronomical observations, and darker areas are generally preferred."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-ee9e51e9-fc3c-4e4b-ae21-45ade4039f71",
+                        "args": {
+                          "request": "Fontainebleau Forest, Limours Plateau, Mont Valérien, Parc Jean Moulin les Guilands, Parc de la Butte-du-Chapeau-Rouge"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CrUFAePx_15sfPP6bXIV6ZW75g6CX2SNxXd6WkaQJCRAeVf2Q232vHlAPRx-aD152MVueHD7JSZsS3Z3bv9AUnZDJVnW2K2iGzVZxNNt0aRt8b6lt1Ppl1c1UcKkxy9KBHQTd8QpRqmk4eVlZiR0YK_K-K5cS22OE7xREOR3yrcJKyZ9PvIC9jlg4WjsuSwSUFR-mAsHYmXbKYOsw_OaPO_fnPgYh4Uwnj7oSxHhqYPxBhNXBqcnqNMlubvWlk45TfY3VXr6umK9BDWxoIKqdTkP_gL2sbbIJ3fKrTcYLE_nfL9g2yengZRhUXU5W1Sqe1l9sg4r7B5fdsTRFHRNjEu_gV26QzVP1ynIuqqPUuN5NhoUDOBR5Stu14gv59XdB_YXk2S67OUvdSWZYh2AJTmggnrZtP9CKWaRqvEZfXwAR1es_dHR6hpQWgM8MIzD9ksKv1I6WFGoHeDdEDN1EUPEwN6UXpy0tFPnRnkw4c3gz92V-core8CjhunXBxwpMfsR2WfXnuO45Kbs8MPaxdUXfWbZYoVY3btAq2N5hBNHawdeOY3tddLiMmFrvLtW6I45bZiAeblHxC1g2-WaMW5DRVRs6cCdESBnaPDRiNq6nJhKtTHCchw6-MNtq2SyW22MbOtage_9zBqFTyOXII43_YDYQeZzAz3tymdAZy2RHurlsa8LU0PhCXMomoTRiweco8CT_oN1N34Mr9HaKQHGyTErpPxgjsS1eBU3B4kZflGaBcNggfnX3Tun2ABZ3yVAxFDOYikv0l3YKKuZ4NzH6KUiMqPRaF2ytIR0Hg33uEBEAMFF_BKgyd0gUxooPiYTcTf6-Y34u7FSV-5GEz7v-aVS-DMxqg7WA0ALl_IjOXrlssYGmWhgZamcQ7qTuJLyWsbzYgt9qGKGISJ09EFDtY-1G629"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-ee9e51e9-fc3c-4e4b-ae21-45ade4039f71",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "I can only search for weather if you provide the latitude and longitude. Please provide the coordinates for these locations."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-11fb1bf8-7cd5-445b-8aee-d31978b327c1",
+                        "args": {
+                          "request": "coordinates of Fontainebleau Forest"
+                        },
+                        "name": "google_search_agent"
+                      },
+                      "thought_signature": "CoQFAePx_17KX1R7qLg0NKJMz-hweclklpinlLp0dKajiQ404DrdecUuPQJ-RKrz9HQcNNsv9-iPjbvdNrtBX4MD_ctrTsdLHgU0EKiiPwvlcbskJEiEkWHOWBEklWlE7VbqPI0ohA9glYWWFeau1iCvZ-8JhGqfydkSFzQ6nPaFyMfX0MZUC6e3IfQOsnsZentkmisuEELGAicIh-qleOu-k8YZ6BNhwVq5SwSaOcSLxAlsI83h-APYjzqj5VA9ptU31mUe3C1vO_XYY9bLaSK71NzjcxbkhDpJyaIsy5EDT3By5RNjTUzx27pVisCv230a_5Z9JqcZ_HbP5XdRyfrKLrHDiiggNQc6VT5yQ--GuCXWXbpGJ8AIBXEl8C6qYZEliFzrdy8quzaS0V36cQxyS2jepdgvOcJbbZJJB2kkd9ZFKB3VKUyqp__1p3-2S3ceS-kz51oSWGPnzjR8qfUlD8AIIXIVLDGx0jlGV_iRZCm3xUObxCjXIgZeEcxf1jq_bvVNGg3RVxT99YzfQROcS8OITGL-BfuwiqXzViiLEctNkS132-eL6iLwcd__nNvtrxblFX5gy55kRp_j7nnmfMlTUqlWkY3Tn7otRg-uUh86h4hZXak9MSPeoJIaH1_iJ1CwDfZGRfaLaav7Ew5TDof7JiKpOEjpexADdICJkG7rB9wAVyrsuiZivHJGri92f7WTEcca1MUdSmHuIf4bUrAhrGP3wgqCj1-jU-Lc8sSCwa4ipJJj6SAnNaRLz9XB5ZYscI0_2c_XEAwz_vw3b3rV4zKRk-PX4M_kYW_-mlfeOdaFBBiMUxcgGuU1J45z4T53KNzQHmXDrFZbMxPFj_Bgjmc="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-11fb1bf8-7cd5-445b-8aee-d31978b327c1",
+                        "name": "google_search_agent",
+                        "response": {
+                          "result": "The Fontainebleau Forest has the coordinates 48.4167° N latitude and 2.6667° E longitude. It is a mixed deciduous forest located sixty kilometers southeast of Paris, France. The forest is known for its diverse landscapes, including hills, valleys, gorges, moorland, and sandstone rocks, which create unique ecological circumstances that support a wealth of fauna and flora. This natural environment has inspired artists and has also been recognized for its historical and heritage value. The forest has been a popular destination for nature tourism since the 19th century, with marked trails created for walkers."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-674ba6c7-dbc3-4549-b566-dd5c00deed52",
+                        "args": {
+                          "request": "coordinates of Limours Plateau"
+                        },
+                        "name": "google_search_agent"
+                      },
+                      "thought_signature": "CrcCAePx_17GypfvW3troechjNH1sB6ppalEaUsbw9z8RPaHSBI7wKRLVkp80loF4BwLzqpROWJORQSeEa49IEOWYePn3U1mAkUel0GNaBMaP7QMXiwuuwDLQTZ8mIge1NjGNEdoau4t2BybChAFe8VZedRW-3cG0UTdz6J3eW2rPRP82lAsnmKU40eZDtDeiGMOMF-GQCBZIZt0hkRfThXH0UfvyWcsMQ_wtGzyQLAKXmUeBIDKnRT9Qxw0Dsi_lTCdTd4a-bw0u8iYQPbBg6xKD5kQKlYoI0jvkmV9H-T0XzlhfxVkT_Z4Y3Ufm23lAdnwrj0_h8XyEcz8lIF3lVhKFJ2PYDprJ_RFAGhm2fGReso4K55-y_SYCTHHDIODW1eP2ceCrqK62z0SQ-cHh5KsuEDmyqci1TQ="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-674ba6c7-dbc3-4549-b566-dd5c00deed52",
+                        "name": "google_search_agent",
+                        "response": {
+                          "result": "The Plateau de Limours is an agricultural area with wooded and urban sections, located in the Île-de-France region of France. It is described as a vast expanse of cultivated fields not interrupted by the city or forest. The plateau is the highest and largest of the Hurepoix plateaus, reaching altitudes between 177 and 181 meters.\n\nThe coordinates for Limours itself are 48°38′45″N and 2°04′37″E. While specific coordinates for the entire \"Plateau de Limours\" are not explicitly provided, its extent is described as being 18 kilometers long from Cernay-la-Ville to the plain of Déluge.\n\nFor astronomy observations, general information about dark sky sites is available for other regions, such as the PNR Millevaches which lists 11 accessible sites for observing the night sky. In the Alps, sites like Plateau Rosa and Jungfraujoch are mentioned for their high altitude and reduced light pollution, making them suitable for astronomical observations. The Observatoire de la Côte d'Azur has multiple sites, including the Plateau de Calern observatory, which is used for astronomical research and data collection.\n\nWhile no specific astronomy observation locations are detailed for the Plateau de Limours, its open, agricultural nature might offer some advantages compared to more urbanized areas, though light pollution would still be a factor to consider."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-d29de1ce-a008-478a-96ec-b92cde8d92b2",
+                        "args": {
+                          "request": "coordinates of Mont Valérien"
+                        },
+                        "name": "google_search_agent"
+                      },
+                      "thought_signature": "CpICAePx_1747_hH5MqB5u7Pmd0dbNTVJRsNywK_SDAtFQYrdPPhKnx3HpT0DNyX1J_HzXleNEAqTIjSZRQzMFvkZdqKCuF5fYxDHnYfPfakEil-74wfJYh3Xs3l_gLPHuaZg-eXVo8xlkgqfHxxvUXtv6S0B80dolK5Ut-EDVvEsJwxdS64BFC2Tc8RstE9Coj133SW361YW-z88udHkzUp3_Qo7fbcfisLjjIzvv8dNCoCQ7ol9cM6v6bnW4ft90SBfnMLxm1QR7szAj6Jfn1F8II-jl_S8heVsvF4pBCIhTFZwxaZtCxzUjl9Tf9K10c5W6vKgSAeeQy5PKcymqBoU8RSgdphbzFKfanfZpni6czhNQ=="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-d29de1ce-a008-478a-96ec-b92cde8d92b2",
+                        "name": "google_search_agent",
+                        "response": {
+                          "result": "Mont Valérien is located in Suresnes, France. The coordinates for Mont Valérien are approximately 48.87277° N latitude and 2.21306° E longitude. It is also noted that the GPS coordinates for Fort Mont-Valérien are 48.8705° N latitude and 2.2078° E longitude."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-93b760e5-d702-489a-a32f-9d3b605a3e88",
+                        "args": {
+                          "request": "coordinates of Parc Jean Moulin les Guilands"
+                        },
+                        "name": "google_search_agent"
+                      },
+                      "thought_signature": "Ct0BAePx_16H1R_0o1GQhz_g5puX2Zx0WiC4iirKO8jKCBhHEcQ7Crks8GZQPj3bE-bQjK9O7mN9xG2HwPp7p3rCpefnC8OcZlPXTbj0kLhGefSuZCDwW6FO6S-p2-bPXQUieQyx22lgtryjjZFWYxC6JincKONLMEsrDWG_hO_ph_Wsa3qY4QmqJshGc3FN8GhuUq-rvRxy-NTXQfQZGUjwZ-lBvCyj7eWLY2_oSpuy8rvFSH896UODL8gDsbI6AmMGCjGjTv5r-DpVRrq8_m5FEE_pFQf5zrWj4hl-j_I="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-93b760e5-d702-489a-a32f-9d3b605a3e88",
+                        "name": "google_search_agent",
+                        "response": {
+                          "result": "The coordinates for Parc Jean Moulin les Guilands are approximately 48.86228° N latitude and 2.42545° E longitude. This park is located in Saint-Mandé, France, and spans across the communes of Bagnolet and Montreuil. It is described as a departmental park and a place for walks, relaxation, games, and nature discovery. The park covers 26 hectares and features various natural habitats, including an pond, shrubby wastelands, and young woodlands, making it a valuable green space."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-9569df00-ca0a-4a0d-a14f-3600a1979470",
+                        "args": {
+                          "request": "coordinates of Parc de la Butte-du-Chapeau-Rouge"
+                        },
+                        "name": "google_search_agent"
+                      },
+                      "thought_signature": "CtoBAePx_16Qd9PlboQMUhNGlj7Cil50fk-O29srjXsWC6tcbUnV5h9PzsghkN2jxeGaRBbGZ_Z_2kqOZpS1Mk-XEUBRNNrQOu1Cnr7H6r8iENM-G321tX4JQ2MW1wV8W3iHaW3IsPVnLXeWTI8sfZeTjLvXOJ8AHJ-OcCUOeuObXe6v2WIKrI5fiR6Kdl8TcasBnmEJx-Ye5LzufuDmfsmEd7k_8kUKJqL8E9L4vOBcwb4ZLzS-etaMGLIGG_r9lhdu0igRR7VTftH_H_Sgy-wxZ_MFWbPkY61O6wk="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-9569df00-ca0a-4a0d-a14f-3600a1979470",
+                        "name": "google_search_agent",
+                        "response": {
+                          "result": "The coordinates for Parc de la Butte-du-Chapeau-Rouge are 48°52′53″ N, 2°23′50″ E."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-cbd8132f-9c3d-4c5a-9e7a-510f9594017e",
+                        "args": {
+                          "request": "Fontainebleau Forest (48.4167°N, 2.6667°E), Limours Plateau (48.6458°N, 2.0769°E), Mont Valérien (48.87277°N, 2.21306°E), Parc Jean Moulin les Guilands (48.86228°N, 2.42545°E), Parc de la Butte-du-Chapeau-Rouge (48.88139°N, 2.39722°E)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CowFAePx_17a1mLio3TCFIQCeqWYAUQGMa8ugx5BdgauMqAMOMnZqvVb0KzA57C5VJBdDWes-uy8rJhFLijCp_PTsXSon8MzFvlloAcZJg79nd8QKRXxLvJYJN0a_ipW_S39mSg0MKtXiRQRyAj24uQSrRmubBOoqG5T8SJjUeQCYc4iiYArT5m32K35hR-X6VWWd7W1jfEnKUX80huBe54TPHtH2r4rkoy_Vd3Zkki2LK5lyizhsuzCX95Ylvfpp_uurbu2-KHPKOsMvF1Di7a_lj4UmeWbCkNDz_zD3UB1sDPQN9SwgmTQP2VHgOg4H1gxaacZ3iZw40OwWe6gnFXmGSH10aKVhiFyWa0TLNp5Em30jOr79tQwsN5yzPVqEQmKIkJUP_CABx4cpH5LpyocxWIfhNMq3ppKDaNrs3VriqLzyXxMnJZzJLy3iPEnbLxnn6Uqnk7S6gYCUvP0oPcP2uoJrllirXksh7t1Pq3VR8xR2vc_gEfCM6PyIvgqjtDetD52C-syHyEd3a0aOmItT-7kd5My7zvKcYPIvobiEDluvUUY-awuNSU1iWZSzmcS93Chd7R7fyiLmZWeVdKRlt7txGNSPe-KDvNmirEhLAEtV4JRLJVxbeO8fm--Wh6RGPRuZHuvn3gnaf3x-c3OrOtPXKGcIltnP260bddE1Lf6vxLYCN7irLlLjvp4O9DaDBD6ZoGnr-kxb-5CaNk7QjegR6xmVa2gl0rdyFu1ZM-h6wYtwSQeyTIWxUzyFp9-z_FqPG4GoEuEN0J460gJQvSHT3zSHqG5CdWT5KUt9gvZN-j7Bm_iZ7cm3tKMvxHuJzM4xe8o50cD3MqzfQ7jL7Y1XULt6MFgR6FSyQ=="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-cbd8132f-9c3d-4c5a-9e7a-510f9594017e",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": ""
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-846d53eb-5d8d-4931-be3c-f990f0e1c11a",
+                        "args": {
+                          "request": "Fontainebleau Forest (48.4167, 2.6667)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CqIJAePx_14hRU1R_SkS2w8oEYJbFeRbnxsT-o0R3VWg5-FmKugN23jGaa-jIR8i0fkcjSnSpeF_Y-7Bn_eLJgUXv4WejvsMZwHbpWce-NruSTfroFMkp53xNapDAuZrpURNd-y7-8rLvIz6V9Bn9Gt3OpjippCzUzrAJLqAwIXf9GGUKQr0BmJtcIMTMe55x6d_c03vJmwHnEjodQrscJOq5YzFy-eaBwe3Lvq3E-GLLwXTgfRCA-jioS6E4P2QMWhkBbdfNNf96RcOhHCkzyGWHHjVreVmVzo56qMm33aZJFIYTYBogkI082tDnT-87esrsdrCZwWPA3xL9P4ocS-4w3kbhZIN7G8Gr-G0gRAFF3Lf3Xko2PP-X46H40kXlRKuIH3HzQeg2XdMvWZAEFNp3SS35mkdvteGXQgQG0PrVhVtUqzeYqzntWhvfuAnsExQ2SKW_wldszaM8SyWRDvGfTP_gZoJgaIXj5JyI93IYC_LqcZ-4F08yPN9p9y4NWPBYD88ox-XsdQm1wQnTMIc7rP_oSpBwKInVHdC15-77iA40IO8zsdIOkuLBRvb48Mq-fEkO2PXO77yJf7ItsieOVMGLaAzyOOeKWbJCLhBq2ql8imJuvGcR6NmtqpyQXcbhKAMX8hZ0tqO9-brPLvpKBS5HUvDbcpWnOz3d8nWlN39g0wX6Fa2Ibkwl5Ye4LkTp99HvGbSNpiLMfRjFxBp8kHpFPg0Mjf6-zxTQA5kytvv7t6LXx6uMWfMZ7ppFeQkRX9FP_9Sy5X2iucq2gyEnedgID2tPd5jlxfzZVTqAcorAHT4_9Us1a28FOf0CXbMkZxt9WGu89ZTngfWOle4MJO2PJ5eXkQwxM2bU27hDehwFGD3rtqy3yBW1MqZgho58NmAotYpQuTC9rn_Q1kR_nnz0V-g44AP4X7A0jDQimDf3ZN2sgP23nixS6fZpM19LSimgw7ta9xDL87TPWWg5RSAaanz3RvipTyX92Gb8eh--7aokIFGPVIjMDD3GrDZ_ZJ6BVILq4GxbeP7Su_NitQluXZCGg27_CYXRZ_KsXsn0AoavZVzYaDrK0eJ29uO5GwITFfMLB_xn77JlAH_xfVJGCe-iLa7kkwy0PQ1-8Wzg7sGhblY2DGgGdoDEbyVr4ZMqnjNuISowJAdCALOxflknjlD_VU6rMJ2r5vpYxc_PiZCjgWpIaMeB05iAtjkC6PIocrtlGD_TeNrjN-XYwvAmJ9DLuA9WSrVJIYF7ypLeoBdQP5Yk6vLWzvmiO6RBs_LrkA8TiH5JU_XH6UuxR56sM--OGddrBvJl7SowPQJmEXV94VgG0HUCr4T761McWNiQWsHYVFzetPZO9u-ujnIq2acA-5Wbf0pM1RDhYcyu0J3L7y4GUgt7l4IIk3LQsFj1_8ff80dr1g0Gp0MW_J_BULq7sAqW6PGNcO2MPOPNiY3jpm6Z2uu1CwyIfKK92bE3N_o-KISsMYfl1lNsiwpeScgvPFbc0zh_OAGUgDrUYZo4QEmO98Yb6agH3-RXunumYXz75sOleY-M3N9Oe0VMcsBH24fXxAsPlogl7Ghxg=="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-846d53eb-5d8d-4931-be3c-f990f0e1c11a",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "Here is the weather for Fontainebleau Forest:\n\n*   **Name:** Fontainebleau Forest\n*   **Coordinates:** 48.4167, 2.6667\n*   **Weather Details:**\n    *   Cloud Coverage: 9%, Transparency: 4, Wind: W 3 km/h, Temperature: 6°C at timepoint 3\n    *   Cloud Coverage: 8%, Transparency: 3, Wind: NW 3 km/h, Temperature: 7°C at timepoint 6\n    *   Cloud Coverage: 3%, Transparency: 2, Wind: NW 2 km/h, Temperature: 7°C at timepoint 9\n    *   Cloud Coverage: 2%, Transparency: 2, Wind: W 2 km/h, Temperature: 4°C at timepoint 12\n    *   Cloud Coverage: 3%, Transparency: 3, Wind: SW 2 km/h, Temperature: 3°C at timepoint 15\n    *   Cloud Coverage: 2%, Transparency: 3, Wind: S 2 km/h, Temperature: 2°C at timepoint 18\n    *   Cloud Coverage: 8%, Transparency: 4, Wind: S 2 km/h, Temperature: 1°C at timepoint 21\n    *   Cloud Coverage: 8%, Transparency: 5, Wind: S 3 km/h, Temperature: 2°C at timepoint 24\n    *   Cloud Coverage: 9%, Transparency: 5, Wind: S 3 km/h, Temperature: 3°C at timepoint 27\n    *   Cloud Coverage: 9%, Transparency: 3, Wind: S 3 km/h, Temperature: 6°C at timepoint 30\n    *   Cloud Coverage: 9%, Transparency: 2, Wind: S 3 km/h, Temperature: 6°C at timepoint 33\n    *   Cloud Coverage: 9%, Transparency: 3, Wind: S 3 km/h, Temperature: 6°C at timepoint 36\n    *   Cloud Coverage: 9%, Transparency: 2, Wind: S 3 km/h, Temperature: 6°C at timepoint 39\n    *   Cloud Coverage: 9%, Transparency: 2, Wind: S 3 km/h, Temperature: 6°C at timepoint 42\n    *   Cloud Coverage: 9%, Transparency: 4, Wind: S 3 km/h, Temperature: 5°C at timepoint 45\n    *   Cloud Coverage: 9%, Transparency: 4, Wind: S 3 km/h, Temperature: 5°C at timepoint 48\n    *   Cloud Coverage: 9%, Transparency: 3, Wind: S 3 km/h, Temperature: 6°C at timepoint 51\n    *   Cloud Coverage: 9%, Transparency: 4, Wind: S 3 km/h, Temperature: 6°C at timepoint 54\n    *   Cloud Coverage: 9%, Transparency: 6, Wind: S 3 km/h, Temperature: 6°C at timepoint 57\n    *   Cloud Coverage: 9%, Transparency: 8, Wind: S 3 km/h, Temperature: 5°C at timepoint 60\n    *   Cloud Coverage: 9%, Transparency: 6, Wind: S 2 km/h, Temperature: 5°C at timepoint 63\n    *   Cloud Coverage: 9%, Transparency: 8, Wind: S 2 km/h, Temperature: 5°C at timepoint 66\n    *   Cloud Coverage: 9%, Transparency: 8, Wind: S 2 km/h, Temperature: 5°C at timepoint 69\n    *   Cloud Coverage: 9%, Transparency: 8, Wind: S 2 km/h, Temperature: 5°C at timepoint 72"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-3e9b3afb-2db4-4416-9c45-dfb973ff0954",
+                        "args": {
+                          "request": "Limours Plateau (48.6458, 2.0769)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CpcFAePx_16H0fpJMbRzI7UB5RibOxmtzH0aNmzeL0vIFMUEiOVooK9w7xHB2eqIDvleCXRzARFawhFRj0twED3acb8w6PFjJySa2WEonGVuZdnTNkv8j3vrJpnCwq5v3w2U2Ok5sXd-HRHpUbN-Zhgwc7sERqTSh6qqf30WWogXh92TdTRxfoNCQYfxsGQ-zxdUhSOtSNj5wa1ujGqC988-CIiwZ9b3RNOCxpPZnDDIzq2VYHBELj4-Pdrp077EwQ1f46CEQG5mPMQ2XsiqUo5zl-9ywDJs4jkDiohqLBIVi9mvvno8SZkaR79VMIWwYS0S3HGiLYzTzYb0dFRKBXpLtyqC8Q6cXNL49vzsuapDhMZ3mgxtWepQO8jj5CL1xUEuE1KH-GVZaD-TokZEJFXE1BkxNflVIZdH6xCo1Ak8yldKxhEWOtz-KtdgvCTOn-a-_TWrZ8t7QdDb2gkm996U74h6aSQU8Sdm17Mbuj2o9HOMcOXBJk-zRJRVfm1s0pD0Bdg-yQxLo12yRifSFh4Lm6HUBUYuDopO9kZfUxY51dEYWD8zDzJZCa0BR0meN-ZsP1zbnuy3s8vh0ObTLtYkkTWJzQdgO2bk9Uppkux6cbdf60yThwUtpQ4VQtNT8B7UP05HnYYRasfLyBBt6EL7fyNAy9EEsD341ELJw5grqFDCQFEGtQMyIP6taaWxpVCsYQgNgxAJImI25Q0SPDfaNOYsdQVUHkJEHCqdUkArxeaobwahJv6LBl73_k3a91jdtmppx_f-blNQg3TBa-jHV78rNYTrvDap59jR25-8fuijWjzDZGZQ2Jjaz8OmBV90dwWo-nA0QFrfrW8y5vVoNV7WoVyTPPX6hNf7Q2KMEv0ZOCmAa7I2"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-3e9b3afb-2db4-4416-9c45-dfb973ff0954",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "I'm sorry, I need a location name to look up the weather. Can you please provide it?"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-be66c8c2-2185-447a-9d87-5f16af998c4d",
+                        "args": {
+                          "request": "Limours (48.6458, 2.0769)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CvUGAePx_14H2suTZg-On0ui3hEX6JcvdmgXTYY6NF1R5cSn_SHQu6pZX-gJM3g0NTuN067pKtbXx2u0niPs1euPK2731ifqJZuDkDltz12RmupAV31JzfCXUwOd7xXEG4g5_4tJXKVGflYUJoJYGKTpDgyHb3nUspRxwdjTm4_TAtg89A7S5GtamGlb3WhVtX5xDR9TG3Jo9RTQNpIyLuZi9tKapo5GiONzk7r4PbDOSwfwta1G5MdOfgNZv9zbRSbzEV3qTPl9sGh30dbH6W5Ou52IS9she322Fp-BUcxLPxJrnkXyiwXqs9g3RruUjMVfu6fzdoKBFs_Qm4ARUlZ-ut-tSZFWbfDQKo5GNw8N_eMdJ0qORcowPZFIRRxIGgpvUgRVym16ah5qGCBl2wHuOiWvgpm3w9zjR5wfat5fX92EdgloLd_0DyfFAtO3YONif4NJO4930sbLD0q3-yQSo30nbPuqkqNFpmZTikk5U5wm9xoLxHvioMfylFsGHVhwG707ttYF1d9dJ-1OPh9W45jgiQ9Lde1yL_4cW4iKo6zs_ZLuZ6k7EozFlpVYV2qQa_hF0CaO1mo262o2JkDf7qV3bTAJUE2P5DjMrtRzHvvgN-kzfQLrI31keouVWHq6czG5-hoSmC5doBd6fkXg6Sj1WVsHTB4NZ3qZlSb6f-awxtwOpNGRAeelE0XbWykujnh4lv1NuV-EKLO5MczeM9QC4JLjGVneqeYwKXuo3oKeVmE5rfnuUq2Y8scjcqVM25Y_-s_X8toYvttwjQUvYwzcWqMQjzi1m0f-0VO0iJ8xgUR0Nz5g289lqx9zZidUHygfD91aK4IfOUZDO3vcQPUGZXr0xnBB-ZOiHV6X_G94_Z7bfB4QsOhC2QpnUqFvq6Gg43c463oeDbeftU4LMTxpiyXpHel0HybZa3AAtsKQZIE-5XqwznF26glWdgdX1Is-0G3w9DWV3f6jtqyRReUSKh5wZdIeqcENX4pl-gL45cNO_iA92UBeiZ3BJiVz6acWxDQEFvdd3Sq0cTk-FuEi-4XsED_h8XxQzuJpJAfq6wUnh6kW8E71au-M96er6Jyfoj7YN1XTlaVINA1xJ0SZZXSjbVP5p8_o4m8NfW4kbFbMKyZDwrRpBaekIGu94uDfbGvD1VHQYSWUHYJkwlxOMu1W"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-be66c8c2-2185-447a-9d87-5f16af998c4d",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "I need some clarification. What is the name of the location you want me to check?"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-797929ce-8634-42e0-ae17-561046ba8be3",
+                        "args": {
+                          "request": "Mont Valérien (48.87277, 2.21306)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "Ct4LAePx_17e512mVrb7zbYbR3q03W95-bVExZrTrTIio1pHS9btsZJkTkd44y_JJetXKR2E1pFW79gISXhCj9lQuoFaVpPe5QhyI9_5DjkaQh0TMFmqL-RdKk3gwlabuvPcEdaZXodJRUD26s4cVMw_HOKvSJK2nMknU4rZBWT5tx_hyS2gMBc1rgO5y022s5GYKoNkTY9I3stC3AHBhVrxH1lCNq458WPDcP-MorWE_TwhwhZbq6xCd5yIPRmxj6nDNX0GZBXmH5Alpz6Ul7M5hQ1zX_mytGAnB80eoMKaE-jX8aA1Cxug3n11dRbCqptOsknMuPPepEDAT0hb5QswhYGQqLmt91v41qe_b-cp2hy6y4Rzol4xSRnDkEm2VMvtln1hbXEfu9ih-DCc1P55GlysoXxF6yEVTJ2iOmjwkDOKvlEzs-F0FtPJWlAunnh9P9AC9F2IWsU2BFfQrfH8yUcveo1UwEZcStYtKTW_TW7PGUna1xWnlMsVveHhiTUaePM9wG63UH_UJBX9dtTKvZDUhIfqFW0iiulXF-coa5fOzt0doqD4OH6SdlRzlq-4Y8E6MIp6e_BUFGHJxFHA7GG7SEKIwxB_sHXKwqHLLggogQ1A84oJGztVKMykz_jcA3EmsF21DWLSNCu_ICJV-Imcahi6pMrmbzEtU58EXu9EXqGM0xfVOEqKihihe8YSk2OyZAKUFuISpmmD25YqmLuwuZqBkQJ5-Uhz5qp9rauOt6ZKDDqbJ4x7jLgzQYy8DCHsiZK2fXLUWDaoqhl0H0lJne6S_AiiOZCCE1Yz5eVDPiMst4SQwrqKYz5WUqiDyLpJxs3Sk15aEsjwe1EGAZ_dboDUUQndz9rTt01tx55hdTDp0qvWZvZFiPy3-GpjYUOE3LttunU54E9k-79dWdUEHQ0YMSW5hBEEEzAiaK8FdfUAMpVRRPh0gEae1PIIiFT-IOx261kHpEzfK_oHKrO9_TuLym_YL73eBpfHlbxCYtohaFaKWSYBFTyKq0RnaYAgc94CeKn9pBq2Jv40snIfb7QvtkTSmOTN7mFNCLp9CxtsAVg7CQmPRh1cUI7-IjpeN5XJbaJItyOKv-zi7GvruQydT9Vf0ALl15f-nzNvuc9jyzRXyljsMRcvLPeNSjI6OUecxxqwLdoDXFVs2PcaFelQ0HNEnWL70QYFn0rElmlskccdPZmZ9bK9Xg0Lsw5ZPWtd3qmrpY5Mt-WVHymgyqib6U616W_-RBSm4KsKc94seZnPvvLj73Ebvlo14hinb0psps7Bb9yXIyYgSmIj1l5eMORntc15eTDD_8SXGu9Wx9dz6bFXHVMjrZlrUWIaxCtf1L5uvdD2PM8F8aXr-22ebEVue4VAn5jBT4qDj6N7JqsPK8ZplFm4LvUDqHZKOwt9fv4DmCzvcPtDssPSg8DxN1E5G7iVIiHqy4p0QyjbZCQ8o8Y8naKhWz12G_z9zIQaVfpcs1OEB0iHgbOOcYHzVoPywVmq9xrcD45dEqWaisHGTWJTCB3XyQ36qxr7-HUpYI6hLuQsz_4-5UUy0Fi8wkf3-5cuh5kkdNroAQqE3E7CHrtE6hFNWTV3MIfLEx9Xx3XDRPW4akOq1e9WRCZ1pLCkJ1MzCM-lgYkpt5N0ZxTHB8mYx8soWaJqI1tY30C9prisvEQCuf0fHItrKv76qthv_0ctL-P2oC76xQ5B5s-Q2C6E1wpVtJFSVeihOa-lvWyDk3oQFwSiUEdgzNg6v4d3BZyS0KMLBFVO9MuQ2zBXZvImeFt_3rCS_mIag4c_L0IKEP3yTfYGFpe7jjx6c_I8oHCZfS2Q8prdwqE4mNtfSUxz2JKgJkMsy65KBDsIrRpG4jH9GmItZxCykP_gySPLyfO3Q8Q2rTWlDTx_HLERNcFJnjs5RTC6hn-P5UOCpBcdEajKrSKtuXmFn5tXdvPEY-eoA9oX1BSIxObd2XG3IRDhTPQrtQRL5Nv9XT8t9DsD9ftn41s="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-797929ce-8634-42e0-ae17-561046ba8be3",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "Here is the astronomy weather for Mont Valérien:\n\n*   **Name:** Mont Valérien\n*   **Coordinates:** (48.87277, 2.21306)\n*   **Weather Details:**\n    *   Cloud coverage: 9%\n    *   Transparency: 4\n    *   Wind: NW at 3 km/h\n    *   Temperature: 6°C"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-484c3e5e-1fa6-454d-9b0d-9b166735f5f2",
+                        "args": {
+                          "request": "Parc Jean Moulin les Guilands (48.86228, 2.42545)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CvkFAePx_167jFRpZ0KMoPotL9mVl8kl9nsJBdjGsqa_ky-DNXeRgBPoy7m_-xt7rcm_3oaPhuc13rGSPUeDbOyCWVm2dgh3oVgDDleZGGst-vGjzEFY4vlX_NDNde4xp35uPpHgE78yDCmQSO2ymY5kbkckvKR0eN7m7bSUIalHMtliF2cxLniF-DfdVDpHlPHkSb9angXR4dhoWXEzqV83c41GhvituZ1CQDlI3aOF_KqhXmg0_LqWsYEjs0sSM6olMh6-AhutkFieKmOrHCvBQYulpcmp7_tTDbA1eHVsKVU-vdnX95sROH9yPnTh9PSuBrExs6f8MAsJI26PpXLlogdHKRvNs4hJyTM4dSag6SD4K4iPhVb6MsueqVt6s9Frx55z9Gny1hyk_RfCpr9L4K3Yu7PILkw-8hsqtDHFIXOCTuD73MKy-hxZv3Ix8bCBUdu50wesdm3tbNfwEE0SYOXFQ3veP-vZBocHzIimRQygPoqJ8Lcze64RQdNdsRtnKIYnxULaNCxQzF_4iT-idsXjcbLW1x2NKjsIYHXKRlnaPGly9Zli5GcHj7K58Si4AI_L8Atl4q7gyH8alIyLHwwC1A9f71JkgmjK5hi26dkeQ52-3vNWqtVx20kfBq2dv4utyFalWwLs6BBSGYPoV092B-6hHtzG3ewEUeTjPCVSk0vLJAJKqM1JVRWbzqOlCSHPrJIapd5Zu6HVf1oYEkz0ldd9nddh-CaoiHcUMVi05JxypeYElZdr3_Azq7fxK4VjqcDtnmQoXI-HTAi02QyJB7_Kb2pYCCKoJxE1ZMx8dORtLQgDl4dw3loEornzOlugmWVBU_C8t9NvjdbrHw_h4mZzw_6daEDnz1m3xx2FJHM7tp7GY6HNtHiuj0ofsl6qRVHrCEm5r5fB4KsyZdyGZo4cWGWXRCf49hdKH1vehzI4yIoAYYgA10LszdekNlTd_9JwTo6jOhQ5TtqHWRPtWMy1ls9rlllq0AmYYhkG8ANsS0ADdFQ="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-484c3e5e-1fa6-454d-9b0d-9b166735f5f2",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "To get the weather for Parc Jean Moulin les Guilands, I need to know the longitude and latitude. You have provided the coordinates as (48.86228, 2.42545). Please clarify which one is longitude and which one is latitude."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-c7bc9fdc-49e6-43b5-95b6-6b2b892d4a9a",
+                        "args": {
+                          "request": "Parc Jean Moulin les Guilands (latitude: 48.86228, longitude: 2.42545)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "Cq4FAePx_17REhshrouVur7q_0XOqkof6RuNLRKCuhITWUHIe8rYJzIiPl3N8WSbSbpbAUGIbnv4AihX_RkJm2HHcieRtdNCG2kudD1nyXZLTF53f1e46qTSot2xw3C7OGe3iYk5MBzCDIKsTj-WJdaKeQ4jx-QZ--guURZudjkrzJSucmLpf9VjhfYAkTcfZIDL6VNEIyRXc-w5FDfgjBeeprV5idz-slYDaaWCWtIvbEez3L6XFyX4A9wJNWogMKPYSJX_-l3aiCdBagQo8DmrTVnHeYFtxsLfN31YkKzafnDek5giIyyIgzt1qwnmxOsrhi4rr-ByKzXua4yE0LqVnJjIpvQBnJRtBu4Cb89499ShO9oeZZWmZt_XlnGZqoRUKJsXeBwkh3akKC1E7fCeNLEGCzl5pfG9R3wYLi9d75_sP-HyIQ7l4aYogSy1yVNy3ko2oMqVcRhfpr7_fG4UWF1HG3kBXf53kjHr6FJmDX3_SHXT2VUJg-H7dd4Nh5TYdfDikdGYQ16BsowT7mKA7N30u6-tqL5qA61kqaNyYddwfwLgmYArKOyBgxaV6nG7m98slsW4Wlqno4UJscuStEILOBCqFeEd5oHS3_6iSBfPRjd2FzTpc-7mx8GHZLFmRfsMZHAFHDz5XHXqKHXELM6zWCwZQHQ7QksoXdziPyzI3PlM8AKLqKvug7C8sseCXSo6r_3KieHg_nwo1P7LoVWm1tM26rbm7f_jlcKFNc5ztVaYmqRPUYiRnoU9WnshauopcisA_gLwGx6l_MGK39wKVinFdpMPpPLWgfkzZxlMOZGkvVAbV73e2a-_Dr51vvODpU6HMs7xtXcNPEmI_vRHF-3zdL9QU-BnVtLz2GSm5U9BOX_P7nARorh4py4bEaewiCahlfRE_nRHWGg="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-c7bc9fdc-49e6-43b5-95b6-6b2b892d4a9a",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "I'm sorry, I need a location to provide weather information. Could you please provide the location's name, coordinates, and weather details?"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-3e6d21fb-f205-47bc-be26-128958ac79b8",
+                        "args": {
+                          "request": "Parc Jean Moulin les Guilands (48.86228, 2.42545)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CpwJAePx_15ulPmYiQjvmWxBcLuwhfCvFsqAA429BO_A7qOAcJ1T_h-iMbv8SDyEI4I7Tkc_l5z01_21KJWZrHqEpimgga-q-ubpWaQ1QTBQDB8LYOq5b7ykM1tKBxUjYT_evsCFmi4vreFba5N-V6FqE-1mJs8YaD9nT8935MnlEyTcb1viAtiJNyD97nC44Z6i_KR8dUseETVTOxkO78mJ7QLfue3DaXcyvbhND0ZD2JcufDQep0W2K-fDRFcR9VQIvMs4ai0E2ujvfDDAZEfFhDrbieuQmCITXc0rJ9b-1G5GqIXgkWi8doCY5hVjotL-1gPeKapGLe6Pb17mJAYvSAQ-eHfFa-31Rw5Mrlu9myevIBSkP6EZEijdzytwlrwlXIJYyZaOU1zGH5mBi0U2_tCD3RqSmf9QzhJW9-Tkn70OivVCbzOwe-StrIwzBsXG2s64xZGKdRtoGk2N4kL0vMUx7OoQ5s8CPRWvGCKUPMuk8Dg-R6sh-09XBPBle70JDHEW1VyPeqpxIKIgDjs5M2Rfjo_h1ibztDZN6tbCrni_u2iwYqwDaJ9Rqdp4nv6XGDKKqgPnQFdHjtvWtJeIgj6jdH_Ny7fhC7ytGRt7zForUG-9NAQmqMvW643HQDeOBBpq-6mlC4eV9QoXPFQTjVu3lf3_zO6oIWnKPxaQVZQjBznt1fOUpokQOzJVGExZamXg9Z6Kf2Dzkxs2nmE3NUvUEhKnYA342dFE7wTkEyDwcWE5NMrCkyWn84BIOfUz4jkdFsURGR3JG6kAatd9VfopLc2sI-sLd_8qB0_tqYd4IMKJ8i5VIp0949tC4uG1Ahnh8SOTZOkCk7RjWyWpE06I0dnlbt4jCnVkZ_RO6adt4mgqq8yuwGj_g76jl_Dbat8GYabMj58xclnt6dzmpurlYxFgyvHgVt-b0fy-ul3nfwefUOUwfVseyv_9V2CELQLENWIpyMJKtkwbyiPaitBMOW-Uo8WmAmAqdacDWQKd-oOYSYH1Xl8WQ7FY1zPGozTxy_KNbiAq1UV95W1tCQWaMFiRNVBLwTCR4XQIr75jWrUgmRqB9VB3stvoSxGXvqc4ffU9uNKaB5VAxZC1Ks1SPAg951o-9UAGx3ZDaxa3TRPhC6ASKhRP3Y8e1xenwsYY2C2AnnhjeAWM49kKDDOumbs7vGK7VR1sRky3tBYgtVkEjp5cFrntt71142eD2qLH0I6pl5ScSqAAQQwOTHTt8Nwoos8a0KSEi4p6lnRH7e8YmJrSuDch_BpKh7Ok955wauVY3Zh3n_DQAj2GZTtW9_8KpeS9HYFXLoEhYQPSTBSxNu59PeEHRrAcfknc3E0Fp9Q1TRLJG3kY1K3hYWeSJJAQmUJpsOv6kFJMqDwq5jjMTvxcE_5spX7QN1bmpbwMilUrFr6TbUgmSyW2qpOguEUBYa-1TypHw4qotMMyKEP4kr0EjTwSh8M0ntjhicV68u1c0IZjXhtcYb8Nk1a1CY3l7_x_2_TFvyAUkQUGAo4yRySrx6Gu73y9vHCqrYf5OGqMDI7eicWPNV6RthQg5cf6x8ii_k_Afg=="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-3e6d21fb-f205-47bc-be26-128958ac79b8",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "Here is the astronomy weather for Parc Jean Moulin les Guilands:\n\n*   **Name:** Parc Jean Moulin les Guilands\n*   **Coordinates:** 48.86228, 2.42545\n*   **Weather Details:**\n    *   Cloud coverage: 9\n    *   Transparency: 5\n    *   Wind: W, 3 m/s\n    *   Temperature: 6°C\n    *   Lifted index: 6\n    *   Relative humidity: 12%\n    *   Seeing: 3\n    *   Precipitation type: none"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-66bdc902-b66d-4e51-8821-3b14020a0d34",
+                        "args": {
+                          "request": "Parc de la Butte-du-Chapeau-Rouge (48.88139, 2.39722)"
+                        },
+                        "name": "astro_weather_agent"
+                      },
+                      "thought_signature": "CoEFAePx_17XWF61SzxB5gE7oAeiM_zia7IPyuQx2wLOylMZzK6Kf4kt9HacvnViIAmr8DQNGiZTyVh0UPVWf1xQ3SPlXMq81nGJLILqLN1bj_pZNnlmpJv7sTNGBvPbiDp_mCrIvVb1mN6fldSnTzXT_2Pf6pdeH0BeWFu6OmjhAh68W4gd-dwJ_zYzJ-A6AwM3Qw4udHMbsRMQe8-JENQ4sC4awzeqBsupv40gywCfMGvrraYv11v6kZS7ovST4V0pJlBYwdetN1WB750jKptKhmvePCTsrCliYMB9Gr78zIZ5CNIoAoDjOMrb9vom1Qjg9zmRhObHwfyL7Ekf2u9w9N3T-ffdFkR3iZzhQdu1xqr9Vlu0_xCWiT5Yw_r5hE77jHwQhSHmDF69Drd1Yqa0-mtwJIq0sHMCmByK82WteYELPE77w-nuwtGOODz2C_bncly7Ae4lSznHiwrNuX1v_ZXfa8jZzi0lvCaz-6pF7_8CU1qGAMu3wS6xksjsFOgeeozROeoyY4pcHerFpEEf58PgvSW8JYUQZx8MXvM3X3jwiMzi6tmmrHalk02apb5LUXepg3QMbwgPubE-PPSxYcvWX9vpHXos_KFbcifaWdKca6WjP03SAL2j4xfxy10VItckttnSH9FVFyLgDsTgoEbz3TJTI-Qk2bunupxuy4ZLdwR7aEz5wTABd1zcDT3k2hY4V_-Dc_YD0dKJvkRfJUHVunsDCDeCLi-oyad4kRBHGQIavKd-bbbDBVDNsKDiYR7DIigyPEQKEX24hO-eOAlQugqXxx7xAdPI3VdhGc9uOjRsDO8C-Vc2LPzIa-LkMHtuKEaLJZA-DGDziKxhrmw="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "AstroResearchCoordinator",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-66bdc902-b66d-4e51-8821-3b14020a0d34",
+                        "name": "astro_weather_agent",
+                        "response": {
+                          "result": "Here is the weather for Parc de la Butte-du-Chapeau-Rouge (48.88139, 2.39722):\n\n*   **Cloud coverage:** 9\n*   **Transparency:** 5\n*   **Wind:** W 3\n*   **Temperature:** 6\n*   **Time:** 00:00 UTC"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1764503793.455888
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "user"
+      },
+      "creation_timestamp": 1764505417.6162071
+    }
+  ],
+  "creation_timestamp": 1764505381.8640351
+}
