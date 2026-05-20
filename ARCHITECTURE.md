@@ -16,7 +16,6 @@ MVP должен:
 - распрашивать пользователя о недостающих ограничениях;
 - искать 3-5 доступных мест рядом с заданной локацией;
 - проверять astronomy-oriented weather для найденных мест;
-- учитывать, что сейчас можно разглядеть на небе по календарю/времени наблюдения;
 - выдавать ранжированную рекомендацию с кратким объяснением trade-offs;
 - сохранять сессии между перезапусками приложения, чтобы к ним можно было вернуться.
 
@@ -25,7 +24,9 @@ MVP должен:
 - общая база мест для всех пользователей;
 - социальные отзывы и рейтинги;
 - полноценная карта и навигация;
-- сложная deterministic ranking engine.
+- сложная deterministic ranking engine;
+- проверка текущих астрономических событий и видимых объектов;
+- уточнение состояния природы и сезонных факторов: насекомые, снег, закрытые тропы, wildlife, влажность, локальные ограничения.
 
 ## Архитектурный принцип
 
@@ -79,7 +80,7 @@ Use case:
 - сохраняет обновленную сессию;
 - возвращает ответ для presentation layer.
 
-Application не должен знать конкретные реализации LLM, search, weather, calendar или storage.
+Application не должен знать конкретные реализации LLM, search, weather или storage.
 
 ### Orchestration
 
@@ -99,7 +100,6 @@ User message
   -> Clarify if context is incomplete
   -> Search spots
   -> Check astronomy weather
-  -> Check sky calendar / visible objects
   -> LLM ranking and explanation
   -> Save session
   -> Return answer
@@ -114,7 +114,6 @@ Ports задают границы внешних возможностей:
 - `LLMProvider`
 - `SearchProvider`
 - `WeatherProvider`
-- `SkyCalendarProvider`
 - `SessionStore`
 - `TraceRecorder`
 
@@ -161,23 +160,15 @@ WeatherProvider port
 
 PydanticAI `FallbackModel` подходит для fallback между LLM-моделями и model/native-tool failures. Для weather/search API лучше держать fallback в adapter layer, чтобы orchestration и domain видели один стабильный порт.
 
-## Sky Calendar
+## Расширения после MVP
 
-MVP должен учитывать, что сейчас можно увидеть на небе.
+После MVP система может быть расширена отдельными возможностями:
 
-Для этого вводится отдельный порт:
+- `SkyCalendarProvider` для проверки текущих астрономических событий и видимых объектов;
+- `NatureConditionsProvider` для сезонных и природных факторов: снег, закрытые тропы, насекомые, wildlife, влажность, локальные ограничения;
+- critic/evaluator agent для финальной проверки рекомендаций.
 
-```text
-SkyCalendarProvider.get_visible_objects(location, time_window) -> SkyCalendarReport
-```
-
-На старте реализация может быть простой:
-
-- статические сезонные правила;
-- публичный astronomy API;
-- LLM-assisted interpretation поверх проверяемых источников.
-
-Важно: календарь не должен быть спрятан только в prompt. Это отдельная внешняя возможность, которую можно тестировать и заменить.
+Эти возможности не должны быть спрятаны только в prompt. Когда они появятся, их нужно оформлять как отдельные ports/adapters, чтобы их можно было тестировать и заменять.
 
 ## Сессии
 
@@ -202,7 +193,7 @@ MVP использует Pydantic Logfire как основную систему
 
 - PydanticAI имеет нативную интеграцию с Logfire;
 - Logfire построен на OpenTelemetry, поэтому данные можно отправить в другой OTel-compatible backend;
-- для агентного приложения важен full-stack trace: HTTP request, session load/save, agent run, LLM calls, tool calls, search/weather/calendar calls;
+- для агентного приложения важен full-stack trace: HTTP request, session load/save, agent run, LLM calls, tool calls, search/weather calls;
 - Logfire поддерживает AI-specific visibility: token/cost tracking, tool call inspection, multi-turn conversations и eval traces.
 
 Минимальный набор spans:
@@ -212,7 +203,6 @@ MVP использует Pydantic Logfire как основную систему
 - `agent.run`;
 - `search.find_spots`;
 - `weather.get_astro_weather`;
-- `sky_calendar.get_visible_objects`;
 - `ranking.generate`;
 - `session.save`.
 
@@ -253,7 +243,6 @@ Sensitive data policy:
 - ранжирование или явный top pick;
 - краткие причины выбора;
 - weather summary;
-- что видно на небе в выбранное время;
 - accessibility/safety notes;
 - источники или provenance, когда доступны;
 - вопрос для следующего шага, если нужен выбор времени, транспорта или направления.
@@ -291,12 +280,11 @@ MVP должен иметь три уровня проверок:
 
 - unit tests для domain policies, weather normalization, session store;
 - integration tests с fake providers для полного chat flow;
-- evals для качества финального ответа: 3-5 мест, соблюдение ограничений, погода, sky calendar, объяснение trade-offs.
+- evals для качества финального ответа: 3-5 мест, соблюдение ограничений, погода, объяснение trade-offs.
 
 ## Известные расхождения с текущим кодом
 
 - Код сейчас использует LangGraph/LangChain, а целевая архитектура - PydanticAI и возможно Pydantic Graph.
 - Сессии сейчас in-memory, а MVP требует persistent session store.
-- Sky calendar provider пока отсутствует.
 - Ранжирование в коде частично deterministic, но целевое MVP-решение - LLM ranking с возможным переносом scoring в код позже.
 - Старый README описывает Google ADK; это не целевое решение.
