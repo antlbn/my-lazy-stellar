@@ -23,20 +23,20 @@ The core scenario:
 
 The agent runtime is not the center of the architecture.
 
-LangChain, LangGraph, ADK, OpenAI Agents SDK, model providers, weather APIs, search APIs, databases, and UI frameworks are infrastructure choices. The application should depend on narrow interfaces and adapters, not on a single framework everywhere.
+PydanticAI, PydanticGraph, model providers, weather APIs, search APIs, databases, and UI frameworks are infrastructure choices. The application should depend on narrow interfaces and adapters, not on a single framework everywhere.
 
 The current target is:
 
 ```text
 ┌─────────────────────────────────────┐
 │              Domain                 │
-│  Pure Python / no LangGraph coupling │
+│  Pure Python / pure Pydantic models  │
 │  Agent policy / tools / prompts      │
 └────────────────┬────────────────────┘
                  │ called by
 ┌────────────────▼────────────────────┐
 │        Orchestration Layer           │
-│  LangGraph StateGraph / nodes / edges │
+│  PydanticGraph / typed nodes         │
 │  Framework code is isolated here      │
 └────────────────┬────────────────────┘
                  │ calls through ports
@@ -47,11 +47,11 @@ The current target is:
 └─────────────────────────────────────┘
 ```
 
-LangChain and LangGraph can be used, but only where they provide concrete value:
+PydanticAI and PydanticGraph are the primary orchestration tools:
 
-- LangGraph for explicit orchestration, state transitions, and traceable agent flow.
-- LangChain interfaces or integrations only behind local ports.
-- No direct LangChain or LangGraph dependency inside domain policies, prompts, provider contracts, or presentation code.
+- PydanticGraph for explicit orchestration, state transitions, and type-safe agent flow.
+- PydanticAI `Agent` instances inside nodes for strictly typed LLM interactions.
+- No direct framework dependency inside domain policies, provider contracts, or presentation code.
 
 ## Business Logic
 
@@ -139,15 +139,12 @@ This use case owns the application flow:
 
 The orchestrator coordinates the agent workflow.
 
-With LangGraph, this is the only layer that should know about:
+With PydanticGraph, this is the only layer that should know about:
 
-- `StateGraph`;
-- graph state shape;
-- nodes;
-- edges;
-- conditional routing;
-- checkpointers;
-- LangGraph tracing hooks.
+- `pydantic_graph.Graph` and `Node`;
+- strict Pydantic state schemas;
+- PydanticAI `Agent` injections;
+- conditional routing via typed returns.
 
 ### Humble Object / Presenter
 
@@ -172,7 +169,7 @@ FallbackWeatherProvider
 
 The application depends on interfaces. Infrastructure implements them.
 
-This keeps the project provider-agnostic and prevents LangChain or any other framework from leaking into every layer.
+This keeps the project provider-agnostic and prevents PydanticAI or any other framework from leaking into every layer.
 
 ## Suggested Runtime Flow
 
@@ -181,7 +178,7 @@ User
   -> UI / API / CLI
   -> Presenter
   -> ChatUseCase
-  -> LangGraphOrchestrator
+  -> PydanticGraphOrchestrator
   -> MainAgentNode
   -> SearchNode when needed
   -> WeatherNode when coordinates exist
@@ -226,9 +223,9 @@ app/
 
   orchestration/
     __init__.py
-    langgraph_state.py
-    langgraph_nodes.py
-    langgraph_app.py
+    state.py
+    nodes.py
+    graph.py
 
   infrastructure/
     __init__.py
@@ -332,8 +329,8 @@ domain -> no framework dependencies
 Forbidden dependencies:
 
 ```text
-domain -> langchain
-domain -> langgraph
+domain -> pydantic_ai (only pure pydantic is allowed)
+domain -> pydantic_graph
 domain -> provider SDKs
 application -> concrete weather/search providers
 presentation -> agent runtime
@@ -348,9 +345,16 @@ Start small:
 3. Move 7timer access into `SevenTimerWeatherProvider`.
 4. Add fake weather/search providers for tests.
 5. Add a `ChatUseCase`.
-6. Introduce LangGraph only inside `app/orchestration`.
+6. Introduce PydanticGraph only inside `app/orchestration`.
 7. Add trace-aware pytest tests.
 8. Add promptfoo evals for answer quality.
 9. Keep local run simple through `uv` and `make`.
 
-The goal is not to hide that LangChain/LangGraph is used. The goal is to prevent the whole application from becoming a LangChain-shaped codebase.
+The goal is not to hide that PydanticAI is used. The goal is to prevent the whole application from becoming deeply coupled to any specific framework.
+
+## Future Roadmap (Post-MVP)
+
+1. **Agnostic Interfaces**: Implement multiple frontend entrypoints (e.g., Telegram Bot, CLI, Web UI) reusing the same `ChatUseCase` without modifying business logic.
+2. **Observability & Evaluation**: Expand tracing capabilities (e.g., via LangSmith or OpenTelemetry) to monitor token usage, latency, and agent decision-paths, ensuring production readiness.
+3. **Persistent Location Knowledge Base**: Introduce a database table for stargazing spots and astronomical events. Agents can query this database as a primary source and actively populate it from search results.
+4. **Extensible Multi-Agent System**: Expand the pool of sub-agents (e.g., adding an "Evaluator/Critic" agent to double-check recommendations before returning them).
