@@ -226,7 +226,7 @@
 
     <div class="footer">
       <span class="tag">API</span>
-      <span>POST /apps/app/users/web/sessions → POST /run</span>
+      <span>POST /chat</span>
     </div>
   </div>
 
@@ -266,14 +266,11 @@
       return "";
     }
 
-    async function ensureSession() {
-      const resp = await fetch(
-        `${API_BASE}/apps/${APP_NAME}/users/${USER_ID}/sessions`,
-        { method: "POST" }
-      );
-      const data = await resp.json();
-      sessionId = data.id;
-      statusEl.textContent = `Session: ${sessionId}`;
+    function ensureSession() {
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        statusEl.textContent = `Session: ${sessionId}`;
+      }
     }
 
     async function sendMessage() {
@@ -292,16 +289,11 @@
 
       try {
         const payload = {
-          appName: APP_NAME,
-          userId: USER_ID,
-          sessionId,
-          newMessage: {
-            role: "user",
-            parts: [{ text }]
-          }
+          session_id: sessionId,
+          message: text
         };
 
-        const resp = await fetch(`${API_BASE}/run`, {
+        const resp = await fetch(`${API_BASE}/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -312,8 +304,8 @@
           throw new Error(errorText || resp.statusText);
         }
 
-        const events = await resp.json();
-        const reply = flattenEvents(events) || "[пустой ответ]";
+        const data = await resp.json();
+        const reply = data.response || "[пустой ответ]";
         addMessage("agent", reply);
         statusEl.textContent = `Session: ${sessionId}`;
       } catch (err) {
@@ -334,10 +326,7 @@
       }
     });
 
-    ensureSession().catch((err) => {
-      console.error(err);
-      statusEl.textContent = "Не удалось создать сессию";
-    });
+    ensureSession();
   </script>
 </body>
 </html>
