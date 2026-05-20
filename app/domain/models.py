@@ -18,8 +18,8 @@ class StargazingSpot:
 
 @dataclass
 class WeatherReport:
-    cloud_cover:  dict[int,int] # 0 to 9: 0 is completely clear, 9 is fully overcast
-    transparency: dict[int,int]  # transparency index (from 7timer)
+    cloud_cover: dict[int, int]  # 0 to 9: 0 is completely clear, 9 is fully overcast
+    transparency: dict[int, int]  # transparency index (from 7timer)
     wind_speed: dict[int, float]  # wind index/speed
     temperature: dict[int, float]  # temperature in Celsius
     seeing: int | None = None
@@ -27,6 +27,7 @@ class WeatherReport:
     sunset_time: str | None = None
     sunrise_time: str | None = None
     special_description: str | None = None
+
 
 @dataclass
 class UserContext:

@@ -5,7 +5,7 @@
 Этот файл является основным источником правды по архитектуре MVP.
 `PROJECT_SPEC.md` и старые заметки считаются историческим контекстом, если они противоречат этому документу.
 
-Текущий код еще не полностью соответствует целевой архитектуре: часть реализации использует LangGraph/LangChain. Целевое решение для MVP - PydanticAI, с возможным добавлением Pydantic Graph, если одного PydanticAI станет недостаточно для явной оркестрации.
+Проект находится на раннем этапе. Существующие реализации считаются черновиками, если они противоречат этому документу. Целевое решение для MVP - PydanticAI, с возможным добавлением Pydantic Graph, если одного PydanticAI станет недостаточно для явной оркестрации.
 
 ## Цель MVP
 
@@ -32,7 +32,7 @@ MVP должен:
 
 Фреймворк агента не должен стать центром всей системы.
 
-PydanticAI, Pydantic Graph, поисковые API, weather API, календарные источники, база данных и UI являются инфраструктурными решениями. Основной код должен зависеть от узких локальных интерфейсов.
+PydanticAI, Pydantic Graph, поисковые API, weather API, база данных и UI являются инфраструктурными решениями. Основной код должен зависеть от узких локальных интерфейсов.
 
 ```text
 Presentation / EntryPoints
@@ -137,7 +137,6 @@ Infrastructure реализует ports:
 
 - PydanticAI `WebSearchTool`, если выбранный model/provider поддерживает native web search;
 - PydanticAI common tools: DuckDuckGo, Tavily, Exa;
-- LangChain tool через PydanticAI integration как временный мост;
 - MCP search tool, если появится отдельный search server.
 
 Причина: выбор поисковика является инфраструктурной деталью, а не бизнес-правилом.
@@ -267,7 +266,6 @@ infrastructure -> domain models
 ```text
 domain -> pydantic_ai
 domain -> pydantic_graph
-domain -> langchain
 domain -> provider SDKs
 application -> concrete provider adapters
 presentation -> agent runtime
@@ -282,9 +280,9 @@ MVP должен иметь три уровня проверок:
 - integration tests с fake providers для полного chat flow;
 - evals для качества финального ответа: 3-5 мест, соблюдение ограничений, погода, объяснение trade-offs.
 
-## Известные расхождения с текущим кодом
+## Известные расхождения и черновики
 
-- Код сейчас использует LangGraph/LangChain, а целевая архитектура - PydanticAI и возможно Pydantic Graph.
 - Сессии сейчас in-memory, а MVP требует persistent session store.
 - Ранжирование в коде частично deterministic, но целевое MVP-решение - LLM ranking с возможным переносом scoring в код позже.
 - Старый README описывает Google ADK; это не целевое решение.
+- Любой оставшийся LangGraph/LangChain код считается черновиком и подлежит удалению или замене при реализации PydanticAI flow.
