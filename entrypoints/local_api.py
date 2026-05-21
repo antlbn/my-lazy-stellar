@@ -1,34 +1,53 @@
+import os
 from pathlib import Path
 from typing import Any
 
+import logfire
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from pydantic_ai.models.openai import OpenAIModel
 
 from app.application.chat_use_case import ChatUseCase
-from app.infrastructure.llm.nemotron_openrouter import NemotronOpenRouter
 from app.infrastructure.search.google_search import LLMSearchProvider
 from app.infrastructure.session.in_memory_store import InMemorySessionStore
 from app.infrastructure.weather.seven_timer import SevenTimerWeatherProvider
-from app.orchestration.graph import build_graph
+from app.orchestration.pydantic_ai_orchestrator import PydanticAIOrchestrator
 from app.presentation.presenter import FastApiPresenter
 
-# 1. Initialize Ports / Infrastructure Adapters
-llm = NemotronOpenRouter()
-search = LLMSearchProvider(llm=llm)
+# Configure Logfire observability
+logfire.configure()
+logfire.instrument_pydantic_ai()
+
+# 1. Initialize the Pydantic AI Model (Nemotron via OpenRouter)
+api_key = os.environ.get("OPENROUTER_API_KEY", "dummy_key")
+model = OpenAIModel(
+    "nvidia/llama-3.1-nemotron-ultra-253b-v1:free",
+    base_url="https://openrouter.ai/api/v1",
+    api_key=api_key,
+)
+
+# 2. Initialize Ports / Infrastructure Adapters
+search = LLMSearchProvider(model=model)
 weather = SevenTimerWeatherProvider()
 session_store = InMemorySessionStore()
 
-# 2. Build Orchestrator
-orchestrator = build_graph(search=search, weather=weather, llm=llm)
+# 3. Build Orchestrator
+orchestrator = PydanticAIOrchestrator(
+    model=model,
+    search=search,
+    weather=weather,
+)
 
-# 3. Build Application Use Case
+# 4. Build Application Use Case
 chat_use_case = ChatUseCase(orchestrator=orchestrator, session_store=session_store)
 presenter = FastApiPresenter()
 
-# 4. FastAPI Setup
+# 5. FastAPI Setup
 app = FastAPI(title="Lazy Stellar API")
+
+logfire.instrument_fastapi(app)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,8 +1,6 @@
 from typing import Any
 
-from app.application.responses import AssistantResponse
-from app.domain.models import UserContext
-from app.orchestration.state import AstroState
+from app.application.responses import AssistantResponse, ChatAgentOutput
 from app.ports.session_store import Session, SessionStore
 
 
@@ -23,39 +21,27 @@ class ChatUseCase:
         if not session:
             session = Session(session_id=session_id)
 
-        # 2. Update context heuristically for MVP
-        # (In a real app, an LLM extraction node would update this state dynamically)
-        context = session.state.get("context")
-        if not context:
-            # If there's no context at all, assume this first message provides the location.
-            context = UserContext(location=text)
-            session.state["context"] = context
+        # 2. Add new user message to session
+        messages = [*session.messages, {"role": "user", "content": text}]
 
-        # 3. Prepare initial state for graph
-        # Since we use `operator.add` for messages in AstroState,
-        # providing the full list will replace the history if we don't use MemorySaver.
-        # Wait, if we use operator.add and invoke without MemorySaver, it just adds them together.
-        # We will pass the full list so the LLM nodes have access to the whole history.
-        state_input: AstroState = {
-            "session_id": session_id,
-            "messages": [*session.messages, {"role": "user", "content": text}],
-            "context": context,
-            "spots": session.state.get("spots", []),
-            "recommendations": session.state.get("recommendations", []),
-            "final_answer": "",
-        }
+        # 3. Execute orchestrator (Pydantic AI)
+        agent_output: ChatAgentOutput = self.orchestrator.handle(
+            session_id=session_id,
+            messages=messages,
+        )
 
-        # 4. Execute orchestrator
-        final_state = self.orchestrator.invoke(state_input)
-
-        # 5. Save updated state back to session store
-        session.messages = final_state["messages"]
-        session.state["context"] = final_state["context"]
-        session.state["spots"] = final_state.get("spots", [])
-        session.state["recommendations"] = final_state.get("recommendations", [])
+        # 4. Save updated state back to session store
+        messages.append({"role": "assistant", "content": agent_output.answer})
+        session.messages = messages
+        
+        session.state["recommendations"] = [
+            r.model_dump() for r in agent_output.recommendations
+        ]
+        
         self.session_store.save(session)
 
-        # 6. Return standard response
-        # The last message in the list should be the assistant's reply.
-        reply_text = session.messages[-1]["content"] if session.messages else ""
-        return AssistantResponse(text=reply_text)
+        # 5. Return standard response
+        return AssistantResponse(
+            text=agent_output.answer,
+            agent_output=agent_output,
+        )
