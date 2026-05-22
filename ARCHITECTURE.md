@@ -70,13 +70,17 @@ lazy_stellar/
   capabilities/
     search.py          # SearchCapability — tool find_spots()
     weather.py         # WeatherCapability — tool get_astro_weather()
+  runtime/
+    settings.py        # env/config parsing
+    bootstrap.py       # Logfire/SQLite startup
+    lifecycle.py       # create_runtime() / Runtime.close()
   storage/
     session.py         # SQLite session read/write
-  agent.py             # Agent + Capabilities + system prompt
+  agent.py             # create_agent() + system prompt, no real runtime deps
   prompts/
     main_agent.md      # system prompt
 entrypoints/
-  cli.py / api.py
+  cli.py / web.py
 ```
 
 ---
@@ -97,21 +101,24 @@ User message
 
 ---
 
-## Агент
+## Агент и runtime
 
-Один `Agent` с двумя Capability:
+`agent.py` не создает реальные зависимости на import. Он содержит только:
+
+- `AssistantResponse`;
+- `load_system_prompt()`;
+- `create_agent(...)`.
+
+Реальная сборка приложения живет в `runtime.lifecycle.create_runtime()`:
 
 - `SearchCapability` — инжектирует `search_fn`; внутри — DuckDuckGo / Tavily / Exa
 - `WeatherCapability` — инжектирует `weather_fn`; внутри — 7timer astronomy API
+- `runtime.bootstrap.configure_logfire()` — старт observability один раз на процесс
+- `runtime.bootstrap.initialize_storage()` — старт SQLite
+- `Runtime.close()` — единая точка закрытия ресурсов
 
-`deps_type` — dataclass с инжектированными callable:
-
-```python
-@dataclass
-class Deps:
-    search_fn: SearchFn
-    weather_fn: WeatherFn
-```
+Для текущего MVP достаточно constructor injection в Capability-классах.
+`deps_type` можно добавить позже, если понадобится общий request-scoped context.
 
 Ранжирование для MVP — на стороне LLM.
 Если качество станет нестабильным — scoring переносится в `core/policies.py`.

@@ -4,20 +4,12 @@ import uuid
 import logfire
 from pydantic_ai.messages import ModelMessagesTypeAdapter
 
-from agent import agent
-from storage.session import init_db, load_session, save_session
-
-# 1. Configure Logfire first!
-logfire.configure()
-# 2. Instrument pydantic_ai
-logfire.instrument_pydantic_ai()
-# 3. Instrument httpx
-logfire.instrument_httpx()
-# Note: SQLite instrumentation could be added via OpenTelemetry if needed
+from runtime.lifecycle import create_runtime
+from storage.session import load_session, save_session
 
 
-async def main():
-    init_db()
+async def main() -> None:
+    runtime = create_runtime()
 
     print("Welcome to Lazy Stellar!")
     session_id = input("Enter session ID (or leave blank for new): ").strip()
@@ -25,39 +17,46 @@ async def main():
         session_id = str(uuid.uuid4())
         print(f"Created new session: {session_id}")
 
-    raw_history = load_session(session_id)
+    raw_history = load_session(session_id, runtime.settings.database_path)
     message_history = None
     if raw_history:
         message_history = ModelMessagesTypeAdapter.validate_python(raw_history)
         print("Loaded previous history.")
 
-    while True:
-        try:
-            prompt = input("\nYou: ").strip()
-            if not prompt:
-                continue
-            if prompt.lower() in ["exit", "quit"]:
+    try:
+        while True:
+            try:
+                prompt = input("\nYou: ").strip()
+                if not prompt:
+                    continue
+                if prompt.lower() in ["exit", "quit"]:
+                    break
+
+                with logfire.span("chat_interaction"):
+                    result = await runtime.agent.run(
+                        prompt,
+                        message_history=message_history,
+                        conversation_id=session_id,
+                    )
+
+                    print(f"\nLazy Stellar: {result.output.message}")
+                    if result.output.spots_found > 0:
+                        print(f"[Found {result.output.spots_found} spots]")
+
+                    message_history = result.all_messages()
+                    save_session(
+                        session_id,
+                        ModelMessagesTypeAdapter.dump_python(message_history),
+                        runtime.settings.database_path,
+                    )
+
+            except (KeyboardInterrupt, EOFError):
                 break
-
-            with logfire.span("chat_interaction"):
-                result = await agent.run(
-                    prompt, message_history=message_history, conversation_id=session_id
-                )
-
-                print(f"\nLazy Stellar: {result.output.message}")
-                if result.output.spots_found > 0:
-                    print(f"[Found {result.output.spots_found} spots]")
-
-                message_history = result.all_messages()
-                save_session(
-                    session_id, ModelMessagesTypeAdapter.dump_python(message_history)
-                )
-
-        except (KeyboardInterrupt, EOFError):
-            break
-        except Exception as e:
-            logfire.exception("Error processing chat: {e}", e=e)
-            print(f"Error: {e}")
+            except Exception as e:
+                logfire.exception("Error processing chat: {e}", e=e)
+                print(f"Error: {e}")
+    finally:
+        runtime.close()
 
 
 if __name__ == "__main__":

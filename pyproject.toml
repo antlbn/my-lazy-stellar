@@ -7,10 +7,10 @@ authors = [
 ]
 dependencies = [
     "fastapi>=0.100.0,<0.120.0",
-    "uvicorn[standard]>=0.30.0,<0.35.0",
+    "uvicorn[standard]>=0.38.0,<0.39.0",
     "duckduckgo-search>=5.0.0,<7.0.0",
     "logfire>=4.33.0",
-    "pydantic-ai-slim[logfire,openai]>=1.99.0",
+    "pydantic-ai-slim[logfire,openai,web]>=1.99.0",
 ]
 requires-python = ">=3.10,<3.14"
 
@@ -52,7 +52,7 @@ select = [
 ignore = ["E501", "C901", "B006"] # ignore line too long, too complex
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "frontend"]
+known-first-party = ["agent", "capabilities", "core", "entrypoints", "runtime", "storage"]
 
 [tool.mypy]
 disallow_untyped_calls = true
@@ -87,4 +87,5 @@ pythonpath = "."
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.hatch.build.targets.wheel]
-packages = ["app","frontend"]
+packages = ["capabilities", "core", "entrypoints", "runtime", "storage"]
+include = ["agent.py", "prompts/*.md", "frontend/index.html"]

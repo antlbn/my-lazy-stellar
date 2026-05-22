@@ -1,8 +1,9 @@
 from collections.abc import Callable
 
 import httpx
-from pydantic_ai import Agent, RunContext
-from pydantic_ai.capabilities import Capability
+from pydantic_ai import FunctionToolset, RunContext
+from pydantic_ai.capabilities import AbstractCapability
+from pydantic_ai.toolsets import AgentToolset
 
 from core.models import WeatherReport
 
@@ -39,16 +40,24 @@ def default_weather_fn(latitude: float, longitude: float) -> WeatherReport | Non
         return None
 
 
-class WeatherCapability(Capability):
+class WeatherCapability(AbstractCapability[None]):
     def __init__(
         self, weather_fn: Callable[[float, float], WeatherReport | None] | None = None
-    ):
+    ) -> None:
         self._weather = weather_fn or default_weather_fn
 
-    def register(self, agent: Agent) -> None:
-        @agent.tool
+    @classmethod
+    def get_serialization_name(cls) -> str | None:
+        return None
+
+    def get_toolset(self) -> AgentToolset[None]:
+        toolset = FunctionToolset[None]()
+
+        @toolset.tool
         def get_astro_weather(
-            ctx: RunContext, latitude: float, longitude: float
+            ctx: RunContext[None], latitude: float, longitude: float
         ) -> WeatherReport | None:
             """Fetch astronomy weather (cloud cover, transparency) for a specific coordinate."""
             return self._weather(latitude, longitude)
+
+        return toolset

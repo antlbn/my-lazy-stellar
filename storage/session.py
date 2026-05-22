@@ -1,13 +1,14 @@
 import json
 import sqlite3
+from pathlib import Path
 from typing import Any
 
-DB_PATH = "sessions.db"
+DEFAULT_DB_PATH = Path("sessions.db")
 
 
-def init_db() -> None:
+def init_db(db_path: str | Path = DEFAULT_DB_PATH) -> None:
     """Initialize the SQLite database table for sessions."""
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS sessions (
@@ -18,9 +19,11 @@ def init_db() -> None:
         )
 
 
-def load_session(session_id: str) -> list[dict[str, Any]] | None:
+def load_session(
+    session_id: str, db_path: str | Path = DEFAULT_DB_PATH
+) -> list[dict[str, Any]] | None:
     """Load serialized message history from the database."""
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(db_path) as conn:
         cursor = conn.execute(
             "SELECT history_json FROM sessions WHERE session_id = ?", (session_id,)
         )
@@ -30,10 +33,14 @@ def load_session(session_id: str) -> list[dict[str, Any]] | None:
         return None
 
 
-def save_session(session_id: str, history: list[dict[str, Any]]) -> None:
+def save_session(
+    session_id: str,
+    history: list[dict[str, Any]],
+    db_path: str | Path = DEFAULT_DB_PATH,
+) -> None:
     """Save serialized message history to the database."""
     history_json = json.dumps(history)
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(db_path) as conn:
         conn.execute(
             "INSERT OR REPLACE INTO sessions (session_id, history_json) VALUES (?, ?)",
             (session_id, history_json),

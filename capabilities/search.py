@@ -1,8 +1,9 @@
 from collections.abc import Callable
 
 from duckduckgo_search import DDGS
-from pydantic_ai import Agent, RunContext
-from pydantic_ai.capabilities import Capability
+from pydantic_ai import FunctionToolset, RunContext
+from pydantic_ai.capabilities import AbstractCapability
+from pydantic_ai.toolsets import AgentToolset
 
 from core.models import StargazingSpot, UserContext
 
@@ -32,17 +33,23 @@ def default_search_fn(query: str, context: UserContext) -> list[StargazingSpot]:
     return spots
 
 
-class SearchCapability(Capability):
+class SearchCapability(AbstractCapability[None]):
     def __init__(
         self,
         search_fn: Callable[[str, UserContext], list[StargazingSpot]] | None = None,
-    ):
+    ) -> None:
         self._search = search_fn or default_search_fn
 
-    def register(self, agent: Agent) -> None:
-        @agent.tool
+    @classmethod
+    def get_serialization_name(cls) -> str | None:
+        return None
+
+    def get_toolset(self) -> AgentToolset[None]:
+        toolset = FunctionToolset[None]()
+
+        @toolset.tool
         def search_spots(
-            ctx: RunContext,
+            ctx: RunContext[None],
             query: str,
             location: str,
             transport: str | None = None,
@@ -59,3 +66,5 @@ class SearchCapability(Capability):
                 time_window=time_window,
             )
             return self._search(query, user_context)
+
+        return toolset

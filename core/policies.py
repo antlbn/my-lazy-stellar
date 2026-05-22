@@ -36,7 +36,7 @@ def rank_spots(recommendations: list[Recommendation]) -> list[Recommendation]:
     The function is deterministic and free of LLM calls.
     """
 
-    def _score(rec: Recommendation) -> float:
+    def _score(rec: Recommendation) -> tuple[float, int, int]:
         score = rec.suitability_score
         w = rec.weather
         if w is not None:
@@ -46,6 +46,7 @@ def rank_spots(recommendations: list[Recommendation]) -> list[Recommendation]:
                 score += 2.0
             if w.cloud_cover_now() > CLOUD_COVER_MAX_POOR:
                 score -= 1.0
-        return score
+            return score, -w.cloud_cover_now(), w.transparency_now()
+        return score, 0, 0
 
     return sorted(recommendations, key=_score, reverse=True)
