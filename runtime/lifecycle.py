@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from pydantic_ai import Agent
 
-from agent import AssistantResponse, create_agent
+from agent import create_agent
 from capabilities.search import SearchCapability
 from capabilities.weather import WeatherCapability
 
@@ -13,7 +13,7 @@ from .settings import Settings, load_settings
 @dataclass
 class Runtime:
     settings: Settings
-    agent: Agent[None, AssistantResponse]
+    agent: Agent[None, str]
 
     def close(self) -> None:
         """Close runtime-owned resources.

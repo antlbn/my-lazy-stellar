@@ -39,9 +39,7 @@ async def main() -> None:
                         conversation_id=session_id,
                     )
 
-                    print(f"\nLazy Stellar: {result.output.message}")
-                    if result.output.spots_found > 0:
-                        print(f"[Found {result.output.spots_found} spots]")
+                    print(f"\nLazy Stellar: {result.output}")
 
                     message_history = result.all_messages()
                     save_session(
