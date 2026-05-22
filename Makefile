@@ -14,10 +14,9 @@ install:
 # Launch local server
 run:
 	@echo "==============================================================================="
-	@echo "| 🚀 Starting your local API and 8-bit UI...                                  |"
-	@echo "| 🌐 Open http://localhost:8501 in your browser.                              |"
+	@echo "| 🚀 Starting Lazy Stellar CLI...                                             |"
 	@echo "==============================================================================="
-	uv run python -m entrypoints.local_api
+	uv run python -m entrypoints.cli
 
 # ==============================================================================
 # Testing & Code Quality

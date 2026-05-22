@@ -2,287 +2,187 @@
 
 ## Статус
 
-Этот файл является основным источником правды по архитектуре MVP.
-`PROJECT_SPEC.md` и старые заметки считаются историческим контекстом, если они противоречат этому документу.
+Главный источник правды по архитектуре MVP.
 
-Проект находится на раннем этапе. Существующие реализации считаются черновиками, если они противоречат этому документу. Целевое решение для MVP - PydanticAI, с возможным добавлением Pydantic Graph, если одного PydanticAI станет недостаточно для явной оркестрации.
+---
 
 ## Цель MVP
 
-Lazy Stellar - чат-ассистент для поиска доступных мест для наблюдения звезд.
+Lazy Stellar — чат-ассистент для поиска мест наблюдения звёздного неба.
 
 MVP должен:
 
-- распрашивать пользователя о недостающих ограничениях;
-- искать 3-5 доступных мест рядом с заданной локацией;
-- проверять astronomy-oriented weather для найденных мест;
+- уточнять у пользователя недостающие ограничения;
+- находить 3–5 доступных мест рядом с заданной локацией;
+- проверять astronomy weather для найденных мест;
 - выдавать ранжированную рекомендацию с кратким объяснением trade-offs;
-- сохранять сессии между перезапусками приложения, чтобы к ним можно было вернуться.
+- сохранять сессии между перезапусками приложения.
 
 Не входит в MVP:
 
 - общая база мест для всех пользователей;
 - социальные отзывы и рейтинги;
 - полноценная карта и навигация;
-- сложная deterministic ranking engine;
-- проверка текущих астрономических событий и видимых объектов;
-- уточнение состояния природы и сезонных факторов: насекомые, снег, закрытые тропы, wildlife, влажность, локальные ограничения.
+- проверка астрономических событий и видимых объектов;
+- сезонные факторы: насекомые, снег, закрытые тропы, wildlife.
 
-## Архитектурный принцип
+---
 
-Фреймворк агента не должен стать центром всей системы.
+## Архитектурный подход
 
-PydanticAI, Pydantic Graph, поисковые API, weather API, база данных и UI являются инфраструктурными решениями. Основной код должен зависеть от узких локальных интерфейсов.
+**PydanticAI-native**: используем фреймворк в том виде, в котором он задуман —
+`Agent`, `Capability`, `Hooks`, `deps_type`. Без слоёв ради слоёв.
 
-```text
-Presentation / EntryPoints
-  -> Application
-  -> Orchestration
-  -> Ports
-  -> Infrastructure Adapters
+Фреймворк не защищает от плохих решений автоматически.
+Три правила, которые нужно держать руками:
 
-Domain
-  -> no framework dependencies
+### Правило 1 — Бизнес-логика не живёт в tools
+
+Tool — мост между агентом и внешним миром.
+Правила («считается ли погода хорошей», «достаточно ли данных для поиска») —
+отдельные чистые функции в `core/`, без I/O, без `pydantic_ai`.
+
+### Правило 2 — Зависимости инжектируются, не хардкодятся
+
+Capability-классы принимают реализации снаружи (через конструктор).
+Это позволяет подменять их в тестах без портов и адаптеров:
+
+```python
+class SearchCapability(Capability):
+    def __init__(self, search_fn=None):
+        self._search = search_fn or duckduckgo_search  # инъекция
 ```
 
-## Слои
+### Правило 3 — `core/` не импортирует фреймворк
 
-### Domain
+Модели данных и политики — чистый Python.
+Нарушение: любой `import pydantic_ai` в `core/`.
 
-Содержит чистые модели и правила предметной области.
+---
 
-Примеры:
-
-- `UserContext`
-- `StargazingSpot`
-- `WeatherReport`
-- `Recommendation`
-- политики достаточности контекста;
-- простые threshold-правила для погоды;
-- будущие deterministic ranking helpers.
-
-Domain не должен импортировать PydanticAI, Pydantic Graph, FastAPI, SDK провайдеров, search/weather clients.
-
-### Application
-
-Содержит use case уровня продукта.
-
-Основной контракт:
+## Структура проекта
 
 ```text
-ChatUseCase.handle_message(session_id, user_message) -> AssistantResponse
+lazy_stellar/
+  core/
+    models.py          # StargazingSpot, WeatherReport, UserContext — dataclasses
+    policies.py        # weather_ok(), enough_context(), rank_spots() — pure functions
+  capabilities/
+    search.py          # SearchCapability — tool find_spots()
+    weather.py         # WeatherCapability — tool get_astro_weather()
+  storage/
+    session.py         # SQLite session read/write
+  agent.py             # Agent + Capabilities + system prompt
+  prompts/
+    main_agent.md      # system prompt
+entrypoints/
+  cli.py / api.py
 ```
 
-Use case:
+---
 
-- загружает сессию;
-- передает сообщение в оркестратор;
-- сохраняет обновленную сессию;
-- возвращает ответ для presentation layer.
-
-Application не должен знать конкретные реализации LLM, search, weather или storage.
-
-### Orchestration
-
-Координирует агентный сценарий.
-
-Целевое решение:
-
-- PydanticAI Agent как основной runtime для LLM reasoning, tools и structured output;
-- Pydantic Graph только если понадобится явный typed workflow, ветвления, parallel steps или traceable graph state.
-
-Базовый flow:
+## Flow
 
 ```text
 User message
-  -> Load session
-  -> Main Agent
-  -> Clarify if context is incomplete
-  -> Search spots
-  -> Check astronomy weather
-  -> LLM ranking and explanation
+  -> Load session (SQLite)
+  -> Agent.run() с history
+  -> [Clarify] если нет локации или базовых ограничений
+  -> [search_spots] tool
+  -> [get_astro_weather] tool для каждого места
+  -> LLM ранжирует и объясняет trade-offs
   -> Save session
   -> Return answer
 ```
 
-Для MVP ранжирование остается на стороне LLM. Код может помогать нормализацией данных и простыми safety/weather flags. Если качество ранжирования станет нестабильным, scoring переносится в domain/application code.
+---
 
-### Ports
+## Агент
 
-Ports задают границы внешних возможностей:
+Один `Agent` с двумя Capability:
 
-- `LLMProvider`
-- `SearchProvider`
-- `WeatherProvider`
-- `SessionStore`
-- `TraceRecorder`
+- `SearchCapability` — инжектирует `search_fn`; внутри — DuckDuckGo / Tavily / Exa
+- `WeatherCapability` — инжектирует `weather_fn`; внутри — 7timer astronomy API
 
-Даже если PydanticAI дает готовый инструмент поиска, приложение должно использовать локальный порт. Это оставляет возможность заменить встроенный `WebSearchTool`, DuckDuckGo, Tavily, Exa, Google Search или MCP tool без переписывания use case.
+`deps_type` — dataclass с инжектированными callable:
 
-### Infrastructure
-
-Infrastructure реализует ports:
-
-- PydanticAI/OpenRouter/Gemini/OpenAI adapter для LLM;
-- search adapter через PydanticAI web search tools, DuckDuckGo, Tavily, Exa или другой provider;
-- `7timer` adapter для astronomy weather;
-- fake providers для тестов;
-- persistent session store.
-
-## Поиск
-
-Целевое решение - `SearchProvider` как граница приложения.
-
-Внутри search adapter можно использовать:
-
-- PydanticAI `WebSearchTool`, если выбранный model/provider поддерживает native web search;
-- PydanticAI common tools: DuckDuckGo, Tavily, Exa;
-- MCP search tool, если появится отдельный search server.
-
-Причина: выбор поисковика является инфраструктурной деталью, а не бизнес-правилом.
-
-## Погода
-
-MVP использует один реальный weather provider: `7timer` astronomy API.
-
-Для тестов используется fake weather provider.
-
-Fallback между несколькими weather providers не является обязательным для MVP. Если он появится, его место - infrastructure/application boundary:
-
-```text
-WeatherProvider port
-  <- FallbackWeatherProvider
-       -> SevenTimerWeatherProvider
-       -> SecondaryWeatherProvider
-       -> StaticWeatherProvider for tests
+```python
+@dataclass
+class Deps:
+    search_fn: SearchFn
+    weather_fn: WeatherFn
 ```
 
-PydanticAI `FallbackModel` подходит для fallback между LLM-моделями и model/native-tool failures. Для weather/search API лучше держать fallback в adapter layer, чтобы orchestration и domain видели один стабильный порт.
+Ранжирование для MVP — на стороне LLM.
+Если качество станет нестабильным — scoring переносится в `core/policies.py`.
 
-## Расширения после MVP
-
-После MVP система может быть расширена отдельными возможностями:
-
-- `SkyCalendarProvider` для проверки текущих астрономических событий и видимых объектов;
-- `NatureConditionsProvider` для сезонных и природных факторов: снег, закрытые тропы, насекомые, wildlife, влажность, локальные ограничения;
-- critic/evaluator agent для финальной проверки рекомендаций.
-
-Эти возможности не должны быть спрятаны только в prompt. Когда они появятся, их нужно оформлять как отдельные ports/adapters, чтобы их можно было тестировать и заменять.
+---
 
 ## Сессии
 
-Сессии должны жить между включением и выключением приложения.
+SQLite. Хранит `(session_id, history_json, updated_at)`.
+In-memory — только для тестов.
 
-MVP-решение: persistent `SessionStore`, предпочтительно SQLite.
+---
 
-Причины:
+## Observability
 
-- минимальная операционная сложность;
-- легко запускать локально;
-- достаточно для возврата к старым чатам;
-- можно заменить на Postgres без изменения `ChatUseCase`.
+Logfire как основная система tracing.
 
-In-memory store допустим только для тестов и временной локальной разработки.
+```python
+logfire.instrument_pydantic_ai()
+logfire.instrument_httpx(capture_all=True)
+```
 
-## Tracing и Observability
+Минимальный набор spans: `chat.request`, `agent.run`, `search.find_spots`,
+`weather.get_astro_weather`, `session.load`, `session.save`.
 
-MVP использует Pydantic Logfire как основную систему observability.
+Sensitive data: не писать API keys и полный user input в traces без явной необходимости.
 
-Причины:
-
-- PydanticAI имеет нативную интеграцию с Logfire;
-- Logfire построен на OpenTelemetry, поэтому данные можно отправить в другой OTel-compatible backend;
-- для агентного приложения важен full-stack trace: HTTP request, session load/save, agent run, LLM calls, tool calls, search/weather calls;
-- Logfire поддерживает AI-specific visibility: token/cost tracking, tool call inspection, multi-turn conversations и eval traces.
-
-Минимальный набор spans:
-
-- `chat.request`;
-- `session.load`;
-- `agent.run`;
-- `search.find_spots`;
-- `weather.get_astro_weather`;
-- `ranking.generate`;
-- `session.save`.
-
-Правило границы: observability instrumentation не должна попадать в domain layer.
-
-Допустимые места instrumentation:
-
-- entrypoints/presentation для HTTP spans;
-- application layer для use-case spans;
-- orchestration layer для agent/tool spans;
-- infrastructure adapters для внешних API spans.
-
-Sensitive data policy:
-
-- не писать secrets/API keys в traces;
-- осторожно относиться к полному user prompt/history;
-- для MVP можно логировать session_id, provider name, latency, status, counts, но не приватные данные пользователя без явной необходимости.
+---
 
 ## Уточняющие вопросы
 
-Минимально обязательный контекст для старта сценария - локация.
+Минимум для старта сценария — локация.
 
-Но если пользователь дал только локацию, ассистент должен задать короткий уточняющий вопрос перед поиском, чтобы получить хотя бы основные ограничения:
+Если дана только локация, агент задаёт короткий уточняющий вопрос:
 
-- транспорт;
-- радиус поездки;
+- транспорт и радиус поездки;
 - временное окно;
-- safety/accessibility concerns;
-- телескоп или наблюдение невооруженным глазом.
+- safety / accessibility;
+- телескоп или невооружённым глазом.
 
-Если пользователь явно просит "без уточнений", "любой вариант", "быстро", ассистент может продолжить с разумными defaults и явно указать предположения.
+Если пользователь просит «без уточнений» — агент продолжает с разумными defaults
+и явно указывает предположения.
 
-## Ответ пользователю
+---
 
-Финальный ответ должен содержать:
+## Финальный ответ
 
-- 3-5 найденных мест, если данных достаточно;
-- ранжирование или явный top pick;
+- 3–5 мест;
+- явный top pick или ранжирование;
 - краткие причины выбора;
 - weather summary;
-- accessibility/safety notes;
-- источники или provenance, когда доступны;
-- вопрос для следующего шага, если нужен выбор времени, транспорта или направления.
+- accessibility / safety notes;
+- источники, если доступны;
+- вопрос для следующего шага, если нужен.
 
-## Dependency Rules
-
-Разрешено:
-
-```text
-presentation -> application
-application -> domain
-application -> ports
-application -> orchestration
-orchestration -> domain
-orchestration -> ports
-infrastructure -> ports
-infrastructure -> domain models
-```
-
-Запрещено:
-
-```text
-domain -> pydantic_ai
-domain -> pydantic_graph
-domain -> provider SDKs
-application -> concrete provider adapters
-presentation -> agent runtime
-ports -> infrastructure
-```
+---
 
 ## Тестирование
 
-MVP должен иметь три уровня проверок:
+- **Unit**: функции `core/policies.py` — без моков, без фреймворка.
+- **Integration**: `Agent` с `TestModel` + fake `search_fn` / `weather_fn` через инъекцию.
+- **Evals**: качество финального ответа — 3–5 мест, соблюдение ограничений, погода, trade-offs.
 
-- unit tests для domain policies, weather normalization, session store;
-- integration tests с fake providers для полного chat flow;
-- evals для качества финального ответа: 3-5 мест, соблюдение ограничений, погода, объяснение trade-offs.
+---
 
-## Известные расхождения и черновики
+## После MVP
 
-- Сессии сейчас in-memory, а MVP требует persistent session store.
-- Ранжирование в коде частично deterministic, но целевое MVP-решение - LLM ranking с возможным переносом scoring в код позже.
-- Старый README описывает Google ADK; это не целевое решение.
-- Любой оставшийся LangGraph/LangChain код считается черновиком и подлежит удалению или замене при реализации PydanticAI flow.
+Отдельные расширения, когда понадобятся:
+
+- `SkyCalendarCapability` — текущие астрономические события;
+- `NatureConditionsCapability` — сезонные факторы;
+- critic/evaluator agent для финальной проверки рекомендаций.
+
+Каждое расширение — отдельный Capability с инжектируемой реализацией.

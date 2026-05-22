@@ -28,6 +28,12 @@ class WeatherReport:
     sunrise_time: str | None = None
     special_description: str | None = None
 
+    def cloud_cover_now(self) -> int:
+        return self.cloud_cover.get(0, 9)
+
+    def transparency_now(self) -> int:
+        return self.transparency.get(0, 1)
+
 
 @dataclass
 class UserContext:

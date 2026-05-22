@@ -1,1 +1,0 @@
-"""Lazy Stellar application package."""

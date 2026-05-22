@@ -13,8 +13,8 @@
 Последствия:
 
 - текущий LangGraph/LangChain код должен рассматриваться как переходная реализация;
-- PydanticAI не должен протекать в domain layer;
-- orchestration layer может знать о PydanticAI.
+- фреймворк не должен протекать в `core/` (чистую бизнес-логику);
+- вся логика сборки агента концентрируется в `agent.py`.
 
 ## D002. Pydantic Graph только при необходимости
 
@@ -26,50 +26,47 @@
 
 Последствия:
 
-- сначала проектируется чистая граница orchestration;
-- замена внутреннего orchestration runtime не должна менять application/domain contracts.
+- MVP реализуется через один `Agent` с массивом Capabilities.
 
-## D003. Ports остаются обязательной границей
-
-Статус: принято.
-
-Решение: внешние возможности доступны через ports: `LLMProvider`, `SearchProvider`, `WeatherProvider`, `SessionStore`.
-
-Причина: даже если PydanticAI предоставляет готовые tools, выбор поисковика и weather API остается инфраструктурной деталью.
-
-Последствия:
-
-- use case не зависит от конкретного search/weather SDK;
-- fake providers остаются простыми;
-- можно заменить DuckDuckGo/Tavily/Exa/Google/MCP без переписывания сценария.
-
-## D004. SearchProvider поверх PydanticAI search capabilities
+## D003. Зависимости инжектируются через Capabilities
 
 Статус: принято.
 
-Решение: использовать локальный `SearchProvider` как контракт, а внутри adapter можно подключать PydanticAI web search tools, common tools, LangChain bridge или MCP.
+Решение: внешние возможности (поиск, погода) передаются агенту через инъекцию зависимостей (callable-функции), которые оборачиваются в `Capability` классы. Мы отказываемся от формального слоя Ports & Adapters.
 
-Причина: PydanticAI поддерживает несколько способов поиска: built-in web search для поддерживаемых model providers, common tools вроде DuckDuckGo/Tavily/Exa, third-party LangChain tools и MCP toolsets. Это полезно, но не должно становиться публичным контрактом приложения.
+Причина: PydanticAI-native архитектура делает Capability естественной единицей изоляции. Инъекция функций (вместо жестко прописанных портов) сохраняет возможность легкого тестирования через Fake-реализации, убирая лишний boilerplate.
 
 Последствия:
 
-- search adapter может меняться без изменения domain/application;
-- результаты поиска нужно нормализовать в `StargazingSpot`;
-- parsing/validation search results должны быть тестируемыми.
+- `agent.py` не зависит от конкретного SDK;
+- тесты могут прокидывать фейковые функции при инициализации агента.
 
-## D005. Weather fallback живет за WeatherProvider
+## D004. Поиск оформляется как отдельная Capability
 
 Статус: принято.
 
-Решение: MVP использует один реальный weather provider (`7timer`) и fake provider для тестов. Если появится fallback, он реализуется как adapter за `WeatherProvider`.
+Решение: использовать `SearchCapability` для инкапсуляции поиска. Внутрь инжектируется функция, которая может использовать DuckDuckGo, Tavily, Exa, PydanticAI web search tools или MCP.
 
-Причина: PydanticAI `FallbackModel` решает fallback между LLM-моделями и model/native-tool failures. Fallback внешних weather/search APIs лучше держать в инфраструктурном adapter, чтобы приложение видело один стабильный contract.
+Причина: способ поиска является инфраструктурной деталью. Изоляция в Capability позволяет легко менять механизм (например, перейти с бесплатного DuckDuckGo на платный Tavily) без изменения основного агента.
 
 Последствия:
 
-- orchestration не должен знать список weather providers;
-- fallback можно добавить через `FallbackWeatherProvider`;
-- domain получает нормализованный `WeatherReport` или отсутствие данных.
+- search callable может меняться;
+- результаты поиска нужно нормализовать в `StargazingSpot` (dataclass);
+- логика парсинга и валидации результатов остается тестируемой.
+
+## D005. Fallback реализуется как функция-обертка
+
+Статус: принято.
+
+Решение: MVP использует один реальный weather provider (`7timer`) и fake-функцию для тестов. Если появится fallback для внешнего API, он реализуется как функция-обертка вокруг вызова и передается в `WeatherCapability`.
+
+Причина: PydanticAI `FallbackModel` решает проблемы с LLM-провайдерами. Fallback для внешних API (погода, поиск) проще и чище решать на уровне обычных Python-функций до передачи их в Capability.
+
+Последствия:
+
+- агент не знает о наличии или отсутствии fallback'а для погоды;
+- `core/` получает нормализованный `WeatherReport` или None (при отсутствии данных).
 
 ## D006. LLM ranking для MVP
 
@@ -83,7 +80,7 @@
 
 - код должен готовить качественный структурированный context для LLM;
 - финальный ответ должен объяснять ранжирование;
-- если качество станет нестабильным, scoring переносится в domain/application code.
+- если качество станет нестабильным, scoring переносится в виде чистой функции в `core/policies.py`.
 
 ## D007. Persistent sessions обязательны для MVP
 
@@ -95,9 +92,9 @@
 
 Последствия:
 
-- in-memory session store допустим только для тестов и временной разработки;
-- рекомендуемый MVP storage - SQLite;
-- `ChatUseCase` должен работать только через `SessionStore`.
+- in-memory session store допустим только для тестов;
+- рекомендуемый MVP storage - SQLite (`storage/session.py`);
+- Entrypoint напрямую работает с `agent.run()` и функциями загрузки/сохранения сессии.
 
 ## D008. Sky calendar и nature conditions откладываются после MVP
 
@@ -105,13 +102,11 @@
 
 Решение: проверку текущих астрономических событий, видимых объектов и дополнительных природных условий не включать в первый MVP.
 
-Причина: первый MVP должен сфокусироваться на надежном основном сценарии: понять пожелания пользователя, найти 3-5 подходящих мест и проверить погоду. Astro events и nature conditions расширяют ценность, но увеличивают количество внешних источников и edge cases.
+Причина: первый MVP должен сфокусироваться на надежном основном сценарии: понять пожелания пользователя, найти 3-5 подходящих мест и проверить погоду. Astro events и nature conditions расширяют ценность, но увеличивают количество edge cases.
 
 Последствия:
 
-- `SkyCalendarProvider` не является обязательным для первого MVP;
-- `NatureConditionsProvider` не является обязательным для первого MVP;
-- когда эти возможности появятся, их нужно оформлять через отдельные ports/adapters, а не прятать только в prompt.
+- когда эти возможности понадобятся, они будут оформлены как новые отдельные Capabilities.
 
 ## D009. Clarification-first UX
 
@@ -125,36 +120,10 @@
 
 - location остается минимально обязательным полем;
 - transport/radius/time/safety/telescope являются важными, но не всегда blocking;
-- policy должна быть выражена не только prompt-ом, но и проверяемой логикой.
+- policy должна быть выражена не только prompt-ом, но и проверяемой логикой (в `core/policies.py`).
 
-## D010. Новые документы заменяют PROJECT_SPEC как source of truth
 
-Статус: принято.
-
-Решение: `ARCHITECTURE.md` и `decisions.md` становятся каноническими документами MVP.
-
-Причина: старый `PROJECT_SPEC.md` содержит смешение целевой архитектуры, старых идей и текущих деталей. Новые документы короче и точнее фиксируют решения.
-
-Последствия:
-
-- при конфликте читать сначала `ARCHITECTURE.md`, затем `decisions.md`;
-- `PROJECT_SPEC.md` можно позже удалить или переписать в product-only spec;
-- README должен быть обновлен отдельно, чтобы не ссылаться на устаревший Google ADK подход.
-
-## D011. Google ADK не является целевым решением MVP
-
-Статус: принято.
-
-Решение: не использовать Google ADK как целевую архитектуру MVP.
-
-Причина: выбранный путь - PydanticAI-first. Старое описание ADK в README является устаревшим.
-
-Последствия:
-
-- README нужно привести в соответствие;
-- Agent Engine deployment не является текущим архитектурным требованием.
-
-## D012. Документация MVP ведется на русском
+## D011. Документация MVP ведется на русском
 
 Статус: принято.
 
@@ -167,18 +136,17 @@
 - позже документы можно перевести на английский;
 - кодовые имена, class names и file names остаются на английском.
 
-## D013. Pydantic Logfire как observability-система MVP
+## D012. Pydantic Logfire как observability-система MVP
 
 Статус: принято.
 
 Решение: использовать Pydantic Logfire для tracing и observability MVP.
 
-Причина: PydanticAI имеет нативную Logfire-интеграцию, а Logfire построен на OpenTelemetry. Это дает agent traces, model/tool spans, token/cost visibility, eval traces и возможность уйти в другой OTel-compatible backend без переписывания архитектуры.
+Причина: PydanticAI имеет нативную Logfire-интеграцию, а Logfire построен на OpenTelemetry. Это дает agent traces, model/tool spans, token/cost visibility, eval traces и возможность уйти в другой OTel-compatible backend.
 
 Последствия:
 
-- `logfire.configure()` и `logfire.instrument_pydantic_ai()` должны вызываться на уровне приложения/entrypoint;
-- FastAPI и persistent storage можно инструментировать отдельно;
-- custom spans нужны вокруг `ChatUseCase`, search/weather adapters и session store;
-- domain layer остается без observability-зависимостей;
+- `logfire.configure()` и `logfire.instrument_pydantic_ai()` вызываются на уровне entrypoint;
+- кастомные spans нужны вокруг вызовов API в инструментах Capabilities и `storage/session.py`;
+- `core/` (чистые политики и датаклассы) остается без observability-зависимостей;
 - prompts/history/secrets не должны бездумно попадать в traces.
