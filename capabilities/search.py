@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from duckduckgo_search import DDGS
+from duckduckgo_search import AsyncDDGS
 from pydantic_ai import FunctionToolset, RunContext
 from pydantic_ai.capabilities import AbstractCapability
 from pydantic_ai.toolsets import AgentToolset
@@ -8,8 +8,8 @@ from pydantic_ai.toolsets import AgentToolset
 from core.models import StargazingSpot, UserContext
 
 
-def default_search_fn(query: str, context: UserContext) -> list[StargazingSpot] | str:
-    """A resilient search implementation that uses Tavily if an API key is present,
+async def default_search_fn(query: str, context: UserContext) -> list[StargazingSpot] | str:
+    """A resilient async search implementation that uses Tavily if an API key is present,
     falling back to DuckDuckGo, and reporting errors gracefully if both fail."""
     import os
     import httpx
@@ -26,31 +26,32 @@ def default_search_fn(query: str, context: UserContext) -> list[StargazingSpot] 
     if tavily_key:
         logfire.info("Using Tavily Search API for active query: {query}", query=full_query)
         try:
-            response = httpx.post(
-                "https://api.tavily.com/search",
-                json={
-                    "api_key": tavily_key,
-                    "query": full_query,
-                    "max_results": 3,
-                },
-                timeout=8.0
-            )
-            response.raise_for_status()
-            results = response.json().get("results", [])
-            for r in results:
-                spots.append(
-                    StargazingSpot(
-                        name=r.get("title", "Unknown Spot"),
-                        latitude=48.8566,  # Default fallback coords for weather API
-                        longitude=2.3522,
-                        source=r.get("url", ""),
-                        description=r.get("content", ""),
-                        accessibility="See description / source",
-                        safety_assessment="Unknown",
-                        bortle_class=4,
-                    )
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.tavily.com/search",
+                    json={
+                        "api_key": tavily_key,
+                        "query": full_query,
+                        "max_results": 3,
+                    },
+                    timeout=8.0
                 )
-            return spots
+                response.raise_for_status()
+                results = response.json().get("results", [])
+                for r in results:
+                    spots.append(
+                        StargazingSpot(
+                            name=r.get("title", "Unknown Spot"),
+                            latitude=48.8566,  # Default fallback coords for weather API
+                            longitude=2.3522,
+                            source=r.get("url", ""),
+                            description=r.get("content", ""),
+                            accessibility="See description / source",
+                            safety_assessment="Unknown",
+                            bortle_class=4,
+                        )
+                    )
+                return spots
         except Exception as e:
             logfire.exception("Tavily search failed: {error}", error=str(e))
             return (
@@ -61,8 +62,8 @@ def default_search_fn(query: str, context: UserContext) -> list[StargazingSpot] 
     # Fallback to DuckDuckGo
     logfire.info("Tavily API key not found. Falling back to DuckDuckGo search.")
     try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(full_query, max_results=3))
+        async with AsyncDDGS() as ddgs:
+            results = await ddgs.text(full_query, max_results=3)
             for r in results:
                 spots.append(
                     StargazingSpot(
@@ -103,7 +104,7 @@ class SearchCapability(AbstractCapability[None]):
         toolset = FunctionToolset[None]()
 
         @toolset.tool
-        def search_spots(
+        async def search_spots(
             ctx: RunContext[None],
             query: str,
             location: str,
@@ -120,6 +121,6 @@ class SearchCapability(AbstractCapability[None]):
                 has_telescope=has_telescope,
                 time_window=time_window,
             )
-            return self._search(query, user_context)
+            return await self._search(query, user_context)
 
         return toolset

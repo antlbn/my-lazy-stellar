@@ -16,6 +16,8 @@ class StargazingSpot:
     seasonal_nature_risks: str | None = None
 
 
+
+
 @dataclass
 class WeatherReport:
     cloud_cover: dict[int, int]  # 0 to 9: 0 is completely clear, 9 is fully overcast
