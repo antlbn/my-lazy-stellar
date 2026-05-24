@@ -199,3 +199,4 @@ my_env.tfvars
 tools/a2a-inspector/
 
 .env
+idea_agent.md
