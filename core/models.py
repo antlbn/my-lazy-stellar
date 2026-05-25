@@ -18,6 +18,8 @@ class StargazingSpot:
     seasonal_nature_risks: str | None = None
 
 
+#пока не буду расширять модель всякими примочками - остановлюсь на этом, если чтото придумую буду дописывать коментарии сюда 
+
 
 
 @dataclass

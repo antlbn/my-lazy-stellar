@@ -77,69 +77,45 @@ def create_agent(
 
 
 
-#The sub-agent that performs the spot searching based on user crieteria. 
-# Ones it has comleted the search, it will return the structured report.
+from pydantic import Field
+import os
+from pydantic_ai.capabilities import WebSearch
+from core.models import StargazingSpot, WeatherReport
 
-# Class for structured result of search_spot sub-agent (Pydantic BaseModel)
-@dataclass
+LAZY_STELLAR_MODEL = os.getenv("LAZY_STELLAR_MODEL", "openrouter:google/gemini-3.1-flash-lite")
+
 class SpotSearchReport(BaseModel):
-    spots_found: int
-    spots: list[StargazingSpot] = field(default_factory=list)
+    spots_found: int = Field(description="Number of spots returned by the search tool.")
+    summary: str = Field(description="Concise user-facing answer in English.")
+    spots: list[StargazingSpot] = Field(default_factory=list)
 
 agent_spot_searcher = Agent(
     model=LAZY_STELLAR_MODEL,
     defer_model_check=True,
-    capabilities=[SearchCapability()],
+    capabilities=[WebSearch(local=False)],
     deps_type=None,
-    output_type: [SpotSearchReport]
+    output_type=SpotSearchReport,
+    instructions=(
+        "You are a stargazing assistant. Use the web search tool to find location-specific recommendations. "
+        "Summarize the returned spots in a SpotSearchReport. "
+        "If search returns an error string, return spots_found=0, spots=[], and put the error in summary. "
+        "Do not invent spots that were not returned by the tool."
+    )
 )
 
-@agent_spot_searcher.system_prompt
-def get_spot_searcher_system_prompt() -> str:
-    return (
-        "You are a helpful assistant that searches the web for stargazing spots. "
-        "When given a user query, your task is to find and summarize relevant information "
-        "about stargazing locations. You should return a structured report with the number of spots found "
-        "and a markdown summary of the best locations. Use the `report_spots` tool to return your findings."
-    )
-
-@agent_spot_searcher.tool_plain
-def report_spots(report: SpotReport) -> str:
-    """This tool is used by the spot searcher agent to report the results of its search.
-
-    The agent should call this tool ONLY after it has completed its search and is ready to present
-    the final findings. The report should include the total number of spots found and a markdown summary
-    of the best stargazing locations. Do NOT call this tool for clarifying questions or intermediate steps.
-    """
-    return (
-        f"[spots_found={report.spots_found}] "
-        f"Report recorded. Now present the following summary to the user:\n\n"
-        f"{report.summary}"
-    )
-
-
-#agent for wetaher esolving: it will call Weather services for given locations and will return report for each spot.  
+class WeatherSummaryReport(BaseModel):
+    summary: str = Field(description="Generic summary of the weather for the requested locations.")
+    reports: list[WeatherReport] = Field(default_factory=list)
+    note: str | None = Field(default=None, description="Note on any errors or issues fetching weather.")
 
 agent_weather_resolver = Agent(
     model=LAZY_STELLAR_MODEL,
     defer_model_check=True,
-    capabilities=[WeatherCapability()]
+    output_type=WeatherSummaryReport,
+    capabilities=[WeatherCapability()],
+    instructions=(
+        "You are a weather assistant for stargazing. Use the get_astro_weather tool to get the weather report for tonight for the given locations. "
+        "Return the structured output as a WeatherSummaryReport. "
+        "If there are issues fetching weather, add a note explaining what happened."
+    )
 )
-
-@agent.tool
-async def check_weather(ctx: RunContext[None], locations: list[str], time_window: str) -> str:
-    r = await agent_weather_resolver.run(
-        ctx,
-        locations=locations,
-        time_window=time_window
-    return r
-
-
-
-@agent_weather_resolver.system_prompt
-def get_weather_resolver_system_prompt() -> str:
-    return (
-        "You are a helpful assistant that checks the weather conditions for stargazing spots. "
-        "When given a location and time window, your task is to determine if the weather will be suitable for stargazing. "
-        "You should return a structured report indicating whether the weather is good or bad for stargazing, along with any relevant details."
-    )   
