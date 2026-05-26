@@ -12,6 +12,7 @@ dependencies = [
     "logfire>=4.33.0",
     "pydantic-ai-slim[logfire,openai,web]>=1.99.0",
     "lxml>=6.1.1",
+    "rich>=15.0.0",
 ]
 requires-python = ">=3.10,<3.14"
 

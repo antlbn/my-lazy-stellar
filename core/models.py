@@ -15,14 +15,40 @@ class StargazingSpot(BaseModel):
     seasonal_nature_risks: str | None = Field(default=None, description="Seasonal nature risks (snow blocks, high tides, etc.)")
 
 
-# model for location query for weather tool 
+
+
+class UserContext(BaseModel):
+    location: str = Field(description="Desired location or area for stargazing")
+    transport: str | None = Field(default=None, description="Mode of transport (e.g. 'car', 'public transit')")
+    radius_km: float | None = Field(default=None, description="Search radius in kilometers")
+    has_telescope: bool | None = Field(default=None, description="Whether the user has a telescope")
+    fear_of_wildlife: bool | None = Field(default=None, description="Whether the user is afraid of wildlife")
+    special_requirements: str | None = Field(default=None, description="Any other special requirements")
+    accessibility_needs: str | None = Field(default=None, description="Accessibility needs or physical limitations")
+    safety_concerns: str | None = Field(default=None, description="Specific safety concerns")
+    time_window: str | None = Field(default=None, description="Preferred time window or date for stargazing")
+
+
+class Recommendation(BaseModel):
+    spot: StargazingSpot = Field(description="The recommended stargazing spot")
+    weather: WeatherReport | None = Field(default=None, description="Weather report for this spot")
+    suitability_score: float = Field(default=0.0, description="Calculated suitability score")
+    notes: str | None = Field(default=None, description="Specific notes or recommendations for the user")
+
+
+#------------------------------------------------------------------------------------
+# contract models for weather capability - agent 
+#-----------------------------------------------------------------------------------
+
+# This LocationQuery model are a helper contract to ask the Weather capability for weather report
+
 class LocationQuery(BaseModel):
     name: str = Field(description="Name of the location")
     latitude: float = Field(description="Latitude coordinate", ge=-90, le=90)
     longitude: float = Field(description="Longitude coordinate", ge=-180, le=180)
     timezone_offset: float = Field(description="UTC timezone offset in hours for the location")
 
-
+# HourlyForecast are helper contract for weather tool, it contains meteo- and astro-parameters for one specific time point of the forecast.
 class HourlyForecast(BaseModel):
     """Метео- и астро-параметры для одной конкретной временной точки прогноза."""
 
@@ -57,7 +83,7 @@ class HourlyForecast(BaseModel):
         description="Precipitation type (e.g., 'none', 'rain', 'snow')."
     )
 
-
+# WeatherReport contract for weather tool, it contains weather report with hourly forecasts for the night-time windows.
 class WeatherReport(BaseModel):
     """Прогноз погоды с шагом 3 часа.
 
@@ -81,8 +107,7 @@ class WeatherReport(BaseModel):
     raw_response: dict = Field(default_factory=dict, description="Raw source API response", exclude=True)
 
     # ------------------------------------------------------------------
-    # Удобные методы для получения «текущего» значения
-    # (первая запись в отфильтрованном ночном окне)
+    # Methods that can be usefull further for evaluating the weather for the night. 
     # ------------------------------------------------------------------
 
     def cloud_cover_now(self) -> int:
@@ -96,22 +121,3 @@ class WeatherReport(BaseModel):
     def seeing_now(self) -> int:
         """Сиинг первой точки прогноза."""
         return self.forecasts[0].seeing if self.forecasts else 1
-
-
-class UserContext(BaseModel):
-    location: str = Field(description="Desired location or area for stargazing")
-    transport: str | None = Field(default=None, description="Mode of transport (e.g. 'car', 'public transit')")
-    radius_km: float | None = Field(default=None, description="Search radius in kilometers")
-    has_telescope: bool | None = Field(default=None, description="Whether the user has a telescope")
-    fear_of_wildlife: bool | None = Field(default=None, description="Whether the user is afraid of wildlife")
-    special_requirements: str | None = Field(default=None, description="Any other special requirements")
-    accessibility_needs: str | None = Field(default=None, description="Accessibility needs or physical limitations")
-    safety_concerns: str | None = Field(default=None, description="Specific safety concerns")
-    time_window: str | None = Field(default=None, description="Preferred time window or date for stargazing")
-
-
-class Recommendation(BaseModel):
-    spot: StargazingSpot = Field(description="The recommended stargazing spot")
-    weather: WeatherReport | None = Field(default=None, description="Weather report for this spot")
-    suitability_score: float = Field(default=0.0, description="Calculated suitability score")
-    notes: str | None = Field(default=None, description="Specific notes or recommendations for the user")

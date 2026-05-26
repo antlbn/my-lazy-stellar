@@ -1316,6 +1316,7 @@ dependencies = [
     { name = "logfire" },
     { name = "lxml" },
     { name = "pydantic-ai-slim", extra = ["logfire", "openai", "web"] },
+    { name = "rich" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -1348,6 +1349,7 @@ requires-dist = [
     { name = "lxml", specifier = ">=6.1.1" },
     { name = "mypy", marker = "extra == 'lint'", specifier = ">=1.15.0,<2.0.0" },
     { name = "pydantic-ai-slim", extras = ["logfire", "openai", "web"], specifier = ">=1.99.0" },
+    { name = "rich", specifier = ">=15.0.0" },
     { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.4.6,<1.0.0" },
     { name = "types-pyyaml", marker = "extra == 'lint'", specifier = ">=6.0.12.20240917,<7.0.0" },
     { name = "types-requests", marker = "extra == 'lint'", specifier = ">=2.32.0.20240914,<3.0.0" },
