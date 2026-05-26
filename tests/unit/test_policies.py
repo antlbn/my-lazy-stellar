@@ -1,4 +1,4 @@
-from core.models import Recommendation, StargazingSpot, UserContext, WeatherReport
+from core.models import HourlyForecast, Recommendation, StargazingSpot, UserContext, WeatherReport
 from core.policies import (
     enough_context_to_search,
     rank_spots,
@@ -9,10 +9,20 @@ from core.policies import (
 
 def _weather(cloud_cover: int, transparency: int) -> WeatherReport:
     return WeatherReport(
-        cloud_cover={0: cloud_cover},
-        transparency={0: transparency},
-        wind_speed={0: 5.0},
-        temperature={0: 12.0},
+        forecasts=[
+            HourlyForecast(
+                time="05-26 22:00",
+                cloud_cover=cloud_cover,
+                transparency=transparency,
+                seeing=1,
+                lifted_index=0,
+                wind_speed=5,
+                wind_direction="N",
+                temperature=12.0,
+                humidity=50,
+                precipitation="none",
+            )
+        ]
     )
 
 

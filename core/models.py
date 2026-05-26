@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 
 class StargazingSpot(BaseModel):
     name: str = Field(description="Name of the stargazing spot")
-    latitude: float = Field(description="Latitude coordinate")
-    longitude: float = Field(description="Longitude coordinate")
+    latitude: float = Field(description="Latitude coordinate", ge=-90, le=90)
+    longitude: float = Field(description="Longitude coordinate", ge=-180, le=180)
     source: str = Field(description="URL source or origin of the recommendation")
     description: str = Field(description="Description of the spot, including highlights or unique features")
     accessibility: str = Field(description="Details on how to access the spot (road quality, walking required)")
@@ -18,60 +18,60 @@ class StargazingSpot(BaseModel):
 # model for location query for weather tool 
 class LocationQuery(BaseModel):
     name: str = Field(description="Name of the location")
-    latitude: float = Field(description="Latitude coordinate")
-    longitude: float = Field(description="Longitude coordinate")
+    latitude: float = Field(description="Latitude coordinate", ge=-90, le=90)
+    longitude: float = Field(description="Longitude coordinate", ge=-180, le=180)
     timezone_offset: float = Field(description="UTC timezone offset in hours for the location")
+
+
+class HourlyForecast(BaseModel):
+    """Метео- и астро-параметры для одной конкретной временной точки прогноза."""
+
+    time: str = Field(
+        description="Local time of the forecast point formatted as 'MM-DD HH:00'."
+    )
+    cloud_cover: int = Field(
+        description="Cloud cover. Scale 1-9: 1 is clear sky, 9 is completely overcast."
+    )
+    transparency: int = Field(
+        description="Atmospheric transparency. Scale 1-8: 1 is best, 8 is worst."
+    )
+    seeing: int = Field(
+        description="Astronomical seeing (stability). Scale 1-8: 1 is best, 8 is worst."
+    )
+    lifted_index: int = Field(
+        description="Atmospheric instability index (Lifted Index). >=2 is stable, <=-4 is unstable."
+    )
+    wind_speed: int = Field(
+        description="Wind speed scale (1-8)."
+    )
+    wind_direction: str = Field(
+        description="Wind direction compass points (e.g., 'N', 'SW')."
+    )
+    temperature: float = Field(
+        description="Temperature in degrees Celsius."
+    )
+    humidity: int = Field(
+        description="Relative humidity in percentage."
+    )
+    precipitation: str = Field(
+        description="Precipitation type (e.g., 'none', 'rain', 'snow')."
+    )
 
 
 class WeatherReport(BaseModel):
     """Прогноз погоды с шагом 3 часа.
 
-    Все словари индексированы локальным временем в формате "MM-DD HH:00".
-    Ночное окно: записи с ~21:00 до ~09:00 (сумерки → рассвет).
+    Содержит отфильтрованные точки для ночного окна (~21:00 до ~09:00 по местному времени).
     """
 
     name: str | None = Field(default=None, description="Name of the location")
-    latitude: float = Field(default=0.0, description="Latitude coordinate")
-    longitude: float = Field(default=0.0, description="Longitude coordinate")
+    latitude: float = Field(default=0.0, description="Latitude coordinate", ge=-90, le=90)
+    longitude: float = Field(default=0.0, description="Longitude coordinate", ge=-180, le=180)
 
-    # --- Ключевые астро-параметры, ключ = "MM-DD HH:00" (локальное время) ---
-    cloud_cover: dict[str, int] = Field(
-        default_factory=dict,
-        description="Cloud cover. Scale 1-9: 1 is clear sky, 9 is completely overcast."
-    )
-    transparency: dict[str, int] = Field(
-        default_factory=dict,
-        description="Atmospheric transparency. Scale 1-8: 1 is best, 8 is worst."
-    )
-    seeing: dict[str, int] = Field(
-        default_factory=dict,
-        description="Astronomical seeing (stability). Scale 1-8: 1 is best, 8 is worst."
-    )
-    lifted_index: dict[str, int] = Field(
-        default_factory=dict,
-        description="Atmospheric instability index (Lifted Index). >=2 is stable, <=-4 is unstable."
-    )
-
-    # --- Метео-параметры, ключ = "MM-DD HH:00" (локальное время) ---
-    wind_speed: dict[str, int] = Field(
-        default_factory=dict,
-        description="Wind speed scale (1-8)."
-    )
-    wind_direction: dict[str, str] = Field(
-        default_factory=dict,
-        description="Wind direction compass points (e.g., 'N', 'SW')."
-    )
-    temperature: dict[str, float] = Field(
-        default_factory=dict,
-        description="Temperature in degrees Celsius."
-    )
-    humidity: dict[str, int] = Field(
-        default_factory=dict,
-        description="Relative humidity in percentage."
-    )
-    precipitation: dict[str, str] = Field(
-        default_factory=dict,
-        description="Precipitation type (e.g., 'none', 'rain', 'snow')."
+    # --- Почасовые прогнозы для ночного окна ---
+    forecasts: list[HourlyForecast] = Field(
+        default_factory=list,
+        description="List of hourly forecasts for the night-time windows."
     )
 
     # --- Метаданные ---
@@ -85,21 +85,17 @@ class WeatherReport(BaseModel):
     # (первая запись в отфильтрованном ночном окне)
     # ------------------------------------------------------------------
 
-    def _first_value(self, mapping: dict, default):
-        """Возвращает первое значение из словаря или default."""
-        return next(iter(mapping.values()), default)
-
     def cloud_cover_now(self) -> int:
         """Облачность первой точки прогноза (1=ясно, 9=пасмурно)."""
-        return self._first_value(self.cloud_cover, 9)
+        return self.forecasts[0].cloud_cover if self.forecasts else 9
 
     def transparency_now(self) -> int:
         """Прозрачность первой точки прогноза."""
-        return self._first_value(self.transparency, 1)
+        return self.forecasts[0].transparency if self.forecasts else 1
 
     def seeing_now(self) -> int:
         """Сиинг первой точки прогноза."""
-        return self._first_value(self.seeing, 1)
+        return self.forecasts[0].seeing if self.forecasts else 1
 
 
 class UserContext(BaseModel):

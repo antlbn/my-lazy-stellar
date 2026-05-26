@@ -8,7 +8,7 @@ from pydantic_ai.capabilities import AbstractCapability
 from pydantic_ai.toolsets import AgentToolset
 
 from concurrent.futures import ThreadPoolExecutor
-from core.models import LocationQuery, WeatherReport
+from core.models import LocationQuery, WeatherReport, HourlyForecast
 
 logger = logging.getLogger(__name__)
 
@@ -136,42 +136,29 @@ def build_weather_report(
 ) -> WeatherReport:
     """Собрать WeatherReport из отфильтрованных точек.
 
-    Ключ каждого словаря — строка «MM-DD HH:00» (локальное время).
+    Ключ каждого прогноза — строка «MM-DD HH:00» (локальное время).
     """
-    cloud_cover:    dict[str, int]   = {}
-    transparency:   dict[str, int]   = {}
-    seeing:         dict[str, int]   = {}
-    lifted_index:   dict[str, int]   = {}
-    wind_speed:     dict[str, int]   = {}
-    wind_direction: dict[str, str]   = {}
-    temperature:    dict[str, float] = {}
-    humidity:       dict[str, int]   = {}
-    precipitation:  dict[str, str]   = {}
-
-    for time_key, point in night_points:
-        cloud_cover[time_key]    = point.get("cloudcover", 9)
-        transparency[time_key]   = point.get("transparency", 1)
-        seeing[time_key]         = point.get("seeing", 1)
-        lifted_index[time_key]   = point.get("lifted_index", 0)
-        wind_speed[time_key]     = point.get("wind10m", {}).get("speed", 0)
-        wind_direction[time_key] = point.get("wind10m", {}).get("direction", "N")
-        temperature[time_key]    = float(point.get("temp2m", 0))
-        humidity[time_key]       = point.get("rh2m", 0)
-        precipitation[time_key]  = point.get("prec_type", "none")
+    forecasts = [
+        HourlyForecast(
+            time=time_key,
+            cloud_cover=point.get("cloudcover", 9),
+            transparency=point.get("transparency", 1),
+            seeing=point.get("seeing", 1),
+            lifted_index=point.get("lifted_index", 0),
+            wind_speed=point.get("wind10m", {}).get("speed", 0),
+            wind_direction=point.get("wind10m", {}).get("direction", "N"),
+            temperature=float(point.get("temp2m", 0)),
+            humidity=point.get("rh2m", 0),
+            precipitation=point.get("prec_type", "none"),
+        )
+        for time_key, point in night_points
+    ]
 
     return WeatherReport(
         name=name,
         latitude=latitude,
         longitude=longitude,
-        cloud_cover=cloud_cover,
-        transparency=transparency,
-        seeing=seeing,
-        lifted_index=lifted_index,
-        wind_speed=wind_speed,
-        wind_direction=wind_direction,
-        temperature=temperature,
-        humidity=humidity,
-        precipitation=precipitation,
+        forecasts=forecasts,
         raw_response=raw_response,
     )
 
