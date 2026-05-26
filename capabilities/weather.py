@@ -1,43 +1,41 @@
 import logging
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta, timezone
+from types import TracebackType
 
 import httpx
 from pydantic_ai import FunctionToolset, RunContext
 from pydantic_ai.capabilities import AbstractCapability
 from pydantic_ai.toolsets import AgentToolset
 
-from concurrent.futures import ThreadPoolExecutor
-from core.models import LocationQuery, WeatherReport, HourlyForecast
+from core.models import HourlyForecast, LocationQuery, WeatherReport
 
 logger = logging.getLogger(__name__)
 
-# Общий HTTP-клиент (thread-safe, переиспользуемый)
-_http_client = httpx.Client(timeout=5.0)
-
-# Ночное окно наблюдений по местному времени: вечер → раннее утро.
+# Night observation window in local time: evening → early morning.
 _NIGHT_HOURS = set(range(21, 24)) | set(range(0, 10))  # 21, 22, 23, 0 … 9
 
-# Формат метки времени в поле "init" от 7timer: YYYYMMDDHH
+# Timestamp format in the "init" field from 7timer: YYYYMMDDHH
 _INIT_FORMAT = "%Y%m%d%H"
 
 
-# ── Слой 1: I/O ──────────────────────────────────────────────────────────────
-# Единственное место, которое знает про HTTP и про 7timer.
-# Всё остальное получает уже готовый dict.
+# ── Layer 1: I/O ──────────────────────────────────────────────────────────────
+# The only component aware of HTTP and 7timer.
+# All other functions receive pre-parsed dictionaries.
 
 def fetch_astro_raw(
     latitude: float,
     longitude: float,
     client: httpx.Client,
 ) -> dict | None:
-    """Сделать HTTP-запрос к 7timer и вернуть сырой JSON как dict.
+    """Make HTTP request to 7timer and return raw JSON as dict.
 
-    Возвращает None при любой сетевой или HTTP-ошибке.
-    Никакой бизнес-логики здесь нет — только транспорт.
+    Returns None on any network or HTTP error.
+    Contains no business logic — only transport.
     """
     url = (
-        "http://www.7timer.info/bin/astro.php"
+        "https://www.7timer.info/bin/astro.php"
         f"?lon={longitude}&lat={latitude}"
         "&ac=0&unit=metric&output=json&tzshift=0"
     )
@@ -46,62 +44,62 @@ def fetch_astro_raw(
         response.raise_for_status()
         return response.json()
     except httpx.HTTPError as exc:
-        logger.error("HTTP-ошибка при запросе погоды (%s, %s): %s", latitude, longitude, exc)
+        logger.error("HTTP error querying weather (%s, %s): %s", latitude, longitude, exc)
         return None
 
 
-# ── Слой 2: чистая логика (pure function) ────────────────────────────────────
-# Принимает данные, возвращает данные. Никакого I/O, никакого datetime.now().
-# Тестируется без моков — просто передаёшь dict и datetime.
+# ── Layer 2: Pure Logic (pure function) ────────────────────────────────────
+# Accepts data, returns data. No I/O, no datetime.now().
+# Testable without mocks — simply pass a dict and datetime.
 
 def parse_night_points(
     data: dict,
     timezone_offset: float,
     now: datetime,
 ) -> list[tuple[str, dict]]:
-    """Отфильтровать dataseries и вернуть точки ближайших двух ночей.
+    """Filter dataseries and return points for the nearest two nights.
 
-    Каждая точка — кортеж (time_key, raw_point), где time_key —
-    строка вида «MM-DD HH:00» в локальном времени.
+    Each point is a tuple (time_key, raw_point), where time_key is
+    a string like "MM-DD HH:00" in local time.
 
-    Правила отбора:
-    - Часы 21:00–23:59 и 00:00–09:59 по местному времени.
-    - Если прогноз «живой» (init < 24 ч назад) — прошедшие точки пропускаем
-      (допуск 2 ч, чтобы не терять текущий час).
-    - Берём максимум 2 ночи: текущую (или ближайшую) и следующую.
+    Selection rules:
+    - Hours 21:00–23:59 and 00:00–09:59 local time.
+    - If forecast is "live" (init < 24 hours ago) — skip past points
+      (with a 2-hour tolerance so current hour isn't immediately lost).
+    - Limit to at most 2 nights: current (or nearest) and next.
     """
-    # 1. Разбираем init-метку
+    # 1. Parse the init timestamp
     raw_init = data.get("init", "")
     try:
         base_time = datetime.strptime(raw_init, _INIT_FORMAT).replace(tzinfo=timezone.utc)
     except ValueError:
-        logger.error("Не удалось разобрать init='%s'", raw_init)
+        logger.error("Could not parse init='%s'", raw_init)
         return []
 
     dataseries = data.get("dataseries", [])
     if not dataseries:
-        logger.debug("Пустой dataseries (init=%s)", raw_init)
+        logger.debug("Empty dataseries (init=%s)", raw_init)
         return []
 
     local_tz = timezone(timedelta(hours=timezone_offset))
     is_live = (now - base_time) < timedelta(hours=24)
 
-    # 2. Группируем точки по «дате ночи»
+    # 2. Group points by "night date"
     nights: dict[date, list[tuple[datetime, dict]]] = {}
     for point in dataseries:
         point_utc   = base_time + timedelta(hours=point["timepoint"])
         point_local = point_utc.astimezone(local_tz)
 
-        # Пропускаем уже прошедшее (с допуском)
+        # Skip points already in the past (with tolerance)
         if is_live and point_utc < now - timedelta(hours=2):
             continue
 
-        # Только ночные часы по местному времени
+        # Night hours only in local time
         if point_local.hour not in _NIGHT_HOURS:
             continue
 
-        # Вечерние часы (≥ 21:00) относим к той же дате,
-        # утренние (< 10:00) — к предыдущей: так вся ночь под одним ключом.
+        # Group evening hours (>= 21:00) with the same calendar date,
+        # and morning hours (< 10:00) with the previous date to keep the night coherent.
         if point_local.hour >= 21:
             night_date = point_local.date()
         else:
@@ -110,10 +108,10 @@ def parse_night_points(
         nights.setdefault(night_date, []).append((point_local, point))
 
     if not nights:
-        logger.debug("Нет ночных точек (init=%s)", raw_init)
+        logger.debug("No night points found (init=%s)", raw_init)
         return []
 
-    # 3. Берём первые две ночи и выстраиваем плоский список
+    # 3. Take the first two nights and flatten the list
     target_dates = sorted(nights.keys())[:2]
     result: list[tuple[str, dict]] = []
     for night_date in target_dates:
@@ -124,8 +122,8 @@ def parse_night_points(
     return result
 
 
-# ── Слой 3: маппинг → модель ─────────────────────────────────────────────────
-# Знает только о структуре WeatherReport. Никакого HTTP, никакой фильтрации.
+# ── Layer 3: Mapping → Model ─────────────────────────────────────────────────
+# Knows only about the structure of WeatherReport. No HTTP, no filtering logic.
 
 def build_weather_report(
     name: str,
@@ -134,9 +132,9 @@ def build_weather_report(
     night_points: list[tuple[str, dict]],
     raw_response: dict,
 ) -> WeatherReport:
-    """Собрать WeatherReport из отфильтрованных точек.
+    """Build WeatherReport from filtered night points.
 
-    Ключ каждого прогноза — строка «MM-DD HH:00» (локальное время).
+    Key for each forecast point is a string "MM-DD HH:00" in local time.
     """
     forecasts = [
         HourlyForecast(
@@ -163,9 +161,9 @@ def build_weather_report(
     )
 
 
-# ── Оркестратор (публичный вход) ─────────────────────────────────────────────
-# Тонкий «клей»: валидация + вызов трёх слоёв по очереди.
-# Все зависимости инъектируемы — тесты могут подменить любую из них.
+# ── Orchestrator (Public Entrypoint) ─────────────────────────────────────────────
+# Glue layer: triggers validation and calls the three layers sequentially.
+# Dependencies are fully injectible for testing.
 
 def default_weather_fn(
     *,
@@ -173,16 +171,26 @@ def default_weather_fn(
     latitude: float,
     longitude: float,
     timezone_offset: float,
-    client: httpx.Client = _http_client,   # подменяется в тестах
-    now: datetime | None = None,           # подменяется в тестах
+    client: httpx.Client | None = None,
+    now: datetime | None = None,
 ) -> WeatherReport | None:
-    """Получить астрономический прогноз и вернуть WeatherReport.
+    """Fetch astronomy forecast and return a WeatherReport.
 
-    Возвращает только ночное окно (~21:00–09:00 по местному времени).
+    Returns only the night-time stargazing windows (~21:00 to ~09:00 local time).
+
+    Args:
+        client: HTTP client to use. When None a short-lived client is created
+            for this call only. Prefer passing a persistent client (e.g. from
+            WeatherCapability) to reuse the connection pool.
     """
     now = now or datetime.now(timezone.utc)
 
-    raw = fetch_astro_raw(latitude, longitude, client)
+    if client is not None:
+        raw = fetch_astro_raw(latitude, longitude, client)
+    else:
+        with httpx.Client(timeout=5.0) as _tmp:
+            raw = fetch_astro_raw(latitude, longitude, _tmp)
+
     if raw is None:
         return None
 
@@ -193,13 +201,50 @@ def default_weather_fn(
     return build_weather_report(name, latitude, longitude, night_points, raw)
 
 
-# ── Capability для агента ─────────────────────────────────────────────────────
+# ── Capability for Agent ─────────────────────────────────────────────────────
 
 class WeatherCapability(AbstractCapability[None]):
+    """Capability that provides astronomical weather forecasts for stargazing.
+
+    Owns an httpx.Client for the duration of its lifetime.
+    Use as a context manager for guaranteed cleanup::
+
+        with WeatherCapability() as cap:
+            agent = Agent(..., capabilities=[cap])
+            ...
+    """
+
     def __init__(
-        self, weather_fn: Callable[..., WeatherReport | None] | None = None
+        self,
+        weather_fn: Callable[..., WeatherReport | None] | None = None,
+        *,
+        http_timeout: float = 5.0,
     ) -> None:
-        self._weather = weather_fn or default_weather_fn
+        self._client = httpx.Client(timeout=http_timeout)
+        # Bind the client into a closure so default_weather_fn always uses
+        # this instance's client, not a module-level singleton.
+        if weather_fn is not None:
+            self._weather = weather_fn
+        else:
+            _client = self._client
+            def _bound_weather_fn(**kwargs: object) -> WeatherReport | None:
+                return default_weather_fn(client=_client, **kwargs)  # type: ignore[arg-type]
+            self._weather = _bound_weather_fn
+
+    def close(self) -> None:
+        """Release the underlying HTTP connection pool."""
+        self._client.close()
+
+    def __enter__(self) -> "WeatherCapability":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.close()
 
     @classmethod
     def get_serialization_name(cls) -> str | None:

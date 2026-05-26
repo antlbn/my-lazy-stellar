@@ -9,6 +9,8 @@ from core.policies import (
 
 def _weather(cloud_cover: int, transparency: int) -> WeatherReport:
     return WeatherReport(
+        latitude=48.2,
+        longitude=16.37,
         forecasts=[
             HourlyForecast(
                 time="05-26 22:00",
@@ -31,6 +33,7 @@ def _spot(name: str) -> StargazingSpot:
         name=name,
         latitude=48.2,
         longitude=16.37,
+        timezone_offset=1.0,
         source="test",
         description="Test spot",
         accessibility="Unknown",

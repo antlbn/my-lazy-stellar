@@ -36,21 +36,18 @@ class Recommendation(BaseModel):
     notes: str | None = Field(default=None, description="Specific notes or recommendations for the user")
 
 
-#------------------------------------------------------------------------------------
-# contract models for weather capability - agent 
-#-----------------------------------------------------------------------------------
+# Contract models for weather capability - agent
 
-# This LocationQuery model are a helper contract to ask the Weather capability for weather report
-
+# This LocationQuery model is a helper contract to ask the Weather capability for a weather report
 class LocationQuery(BaseModel):
     name: str = Field(description="Name of the location")
     latitude: float = Field(description="Latitude coordinate", ge=-90, le=90)
     longitude: float = Field(description="Longitude coordinate", ge=-180, le=180)
     timezone_offset: float = Field(description="UTC timezone offset in hours for the location")
 
-# HourlyForecast are helper contract for weather tool, it contains meteo- and astro-parameters for one specific time point of the forecast.
+
 class HourlyForecast(BaseModel):
-    """Метео- и астро-параметры для одной конкретной временной точки прогноза."""
+    """Meteorological and astronomical parameters for a specific forecast hour."""
 
     time: str = Field(
         description="Local time of the forecast point formatted as 'MM-DD HH:00'."
@@ -83,11 +80,11 @@ class HourlyForecast(BaseModel):
         description="Precipitation type (e.g., 'none', 'rain', 'snow')."
     )
 
-# WeatherReport contract for weather tool, it contains weather report with hourly forecasts for the night-time windows.
-class WeatherReport(BaseModel):
-    """Прогноз погоды с шагом 3 часа.
 
-    Содержит отфильтрованные точки для ночного окна (~21:00 до ~09:00 по местному времени).
+class WeatherReport(BaseModel):
+    """Weather forecast with 3-hour resolution.
+
+    Contains filtered forecast points for the night-time stargazing window (~21:00 to ~09:00 local time).
     """
 
     name: str | None = Field(default=None, description="Name of the location")

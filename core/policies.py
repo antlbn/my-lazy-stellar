@@ -13,9 +13,12 @@ def weather_acceptable(report: WeatherReport | None) -> bool:
     """Return True if the weather is good enough for stargazing."""
     if report is None:
         return True  # no data → don't block search
+    first = report.first_forecast()
+    if first is None:
+        return False
     return (
-        report.cloud_cover_now() <= CLOUD_COVER_MAX_ACCEPTABLE
-        and report.transparency_now() >= TRANSPARENCY_MIN_ACCEPTABLE
+        first.cloud_cover <= CLOUD_COVER_MAX_ACCEPTABLE
+        and first.transparency >= TRANSPARENCY_MIN_ACCEPTABLE
     )
 
 
@@ -23,7 +26,10 @@ def weather_poor(report: WeatherReport | None) -> bool:
     """Return True if the weather is clearly bad (cloud cover > 5)."""
     if report is None:
         return False
-    return report.cloud_cover_now() > CLOUD_COVER_MAX_POOR
+    first = report.first_forecast()
+    if first is None:
+        return True  # No forecast means no clear stargazing conditions (default was 9 cloud cover)
+    return first.cloud_cover > CLOUD_COVER_MAX_POOR
 
 
 def enough_context_to_search(ctx: UserContext) -> bool:
@@ -40,13 +46,18 @@ def rank_spots(recommendations: list[Recommendation]) -> list[Recommendation]:
         score = rec.suitability_score
         w = rec.weather
         if w is not None:
-            if w.cloud_cover_now() <= CLOUD_COVER_MAX_ACCEPTABLE:
-                score += 3.0
-            if w.transparency_now() >= TRANSPARENCY_MIN_ACCEPTABLE:
-                score += 2.0
-            if w.cloud_cover_now() > CLOUD_COVER_MAX_POOR:
-                score -= 1.0
-            return score, -w.cloud_cover_now(), w.transparency_now()
+            first = w.first_forecast()
+            if first is not None:
+                if first.cloud_cover <= CLOUD_COVER_MAX_ACCEPTABLE:
+                    score += 3.0
+                if first.transparency >= TRANSPARENCY_MIN_ACCEPTABLE:
+                    score += 2.0
+                if first.cloud_cover > CLOUD_COVER_MAX_POOR:
+                    score -= 1.0
+                return score, -first.cloud_cover, first.transparency
+            else:
+                # default bad values fallback matching previous behavior
+                return score - 1.0, -9, 1
         return score, 0, 0
 
     return sorted(recommendations, key=_score, reverse=True)
