@@ -1,58 +1,76 @@
-from dataclasses import dataclass, field
-from typing import Optional
+from pydantic import BaseModel, Field
+
+class StargazingSpot(BaseModel):
+    name: str = Field(description="Name of the stargazing spot")
+    latitude: float = Field(description="Latitude coordinate")
+    longitude: float = Field(description="Longitude coordinate")
+    source: str = Field(description="URL source or origin of the recommendation")
+    description: str = Field(description="Description of the spot, including highlights or unique features")
+    accessibility: str = Field(description="Details on how to access the spot (road quality, walking required)")
+    safety_assessment: str = Field(description="Safety assessment of the location (wildlife, steep drops, etc.)")
+    timezone_offset: float | None = Field(default=0.0, description="UTC timezone offset in hours")
+    bortle_class: int | None = Field(default=None, description="Bortle Dark Sky Scale (1-9), where 1 is the darkest")
+    additional_info: str | None = Field(default=None, description="Any other additional info")
+    time_of_discovery: str | None = Field(default=None, description="When the spot was discovered/logged")
+    seasonal_nature_risks: str | None = Field(default=None, description="Seasonal nature risks (snow blocks, high tides, etc.)")
 
 
-@dataclass
-class StargazingSpot:
-    name: str
-    latitude: float
-    longitude: float
-    source: str
-    description: str
-    accessibility: str
-    safety_assessment: str
-    timezone_offset: float  # Смещение относительно UTC в часах
-    bortle_class: int | None = None
-    additional_info: str | None = None
-    time_of_discovery: str | None = None
-    seasonal_nature_risks: str | None = None
-
-
-#пока не буду расширять модель всякими примочками - остановлюсь на этом, если чтото придумую буду дописывать коментарии сюда 
-
-
-
-@dataclass
-class WeatherReport:
+class WeatherReport(BaseModel):
     """Прогноз погоды с шагом 3 часа.
 
-    Все словари индексированы временем в формате "HH:00" (UTC),
-    что соответствует реальному времени точки прогноза.
+    Все словари индексированы локальным временем в формате "MM-DD HH:00".
     Ночное окно: записи с ~21:00 до ~09:00 (сумерки → рассвет).
     """
 
-    name: str | None = None
-    latitude: float = 0.0
-    longitude: float = 0.0
+    name: str | None = Field(default=None, description="Name of the location")
+    latitude: float = Field(default=0.0, description="Latitude coordinate")
+    longitude: float = Field(default=0.0, description="Longitude coordinate")
 
-    # --- Ключевые астро-параметры, ключ = "MM-DD HH:00" (UTC) ---
-    cloud_cover: dict[str, int] = field(default_factory=dict)   # 1–9: 1=ясно, 9=сплошная облачность
-    transparency: dict[str, int] = field(default_factory=dict)  # 1–8: прозрачность атмосферы
-    seeing: dict[str, int] = field(default_factory=dict)        # 1–8: астрономический сиинг
-    lifted_index: dict[str, int] = field(default_factory=dict)  # индекс атм. нестабильности: ≥2=стабильно, ≤-4=нестабильно
+    # --- Ключевые астро-параметры, ключ = "MM-DD HH:00" (локальное время) ---
+    cloud_cover: dict[str, int] = Field(
+        default_factory=dict,
+        description="Cloud cover. Scale 1-9: 1 is clear sky, 9 is completely overcast."
+    )
+    transparency: dict[str, int] = Field(
+        default_factory=dict,
+        description="Atmospheric transparency. Scale 1-8: 1 is best, 8 is worst."
+    )
+    seeing: dict[str, int] = Field(
+        default_factory=dict,
+        description="Astronomical seeing (stability). Scale 1-8: 1 is best, 8 is worst."
+    )
+    lifted_index: dict[str, int] = Field(
+        default_factory=dict,
+        description="Atmospheric instability index (Lifted Index). >=2 is stable, <=-4 is unstable."
+    )
 
-    # --- Метео-параметры, ключ = "MM-DD HH:00" (UTC) ---
-    wind_speed: dict[str, int] = field(default_factory=dict)    # 1–8: балл скорости ветра
-    wind_direction: dict[str, str] = field(default_factory=dict) # стороны света: "N", "SW" и т.д.
-    temperature: dict[str, float] = field(default_factory=dict) # температура, °C
-    humidity: dict[str, int] = field(default_factory=dict)      # относительная влажность, %
-    precipitation: dict[str, str] = field(default_factory=dict) # тип осадков: "none", "rain" и т.д.
+    # --- Метео-параметры, ключ = "MM-DD HH:00" (локальное время) ---
+    wind_speed: dict[str, int] = Field(
+        default_factory=dict,
+        description="Wind speed scale (1-8)."
+    )
+    wind_direction: dict[str, str] = Field(
+        default_factory=dict,
+        description="Wind direction compass points (e.g., 'N', 'SW')."
+    )
+    temperature: dict[str, float] = Field(
+        default_factory=dict,
+        description="Temperature in degrees Celsius."
+    )
+    humidity: dict[str, int] = Field(
+        default_factory=dict,
+        description="Relative humidity in percentage."
+    )
+    precipitation: dict[str, str] = Field(
+        default_factory=dict,
+        description="Precipitation type (e.g., 'none', 'rain', 'snow')."
+    )
 
     # --- Метаданные ---
-    sunset_time: str | None = None
-    sunrise_time: str | None = None
-    special_description: str | None = None
-    raw_response: dict = field(default_factory=dict)
+    sunset_time: str | None = Field(default=None, description="Sunset time, if available")
+    sunrise_time: str | None = Field(default=None, description="Sunrise time, if available")
+    special_description: str | None = Field(default=None, description="Special description or alerts")
+    raw_response: dict = Field(default_factory=dict, description="Raw source API response", exclude=True)
 
     # ------------------------------------------------------------------
     # Удобные методы для получения «текущего» значения
@@ -76,22 +94,20 @@ class WeatherReport:
         return self._first_value(self.seeing, 1)
 
 
-@dataclass
-class UserContext:
-    location: str
-    transport: str | None = None
-    radius_km: float | None = None
-    has_telescope: bool | None = None
-    fear_of_wildlife: bool | None = None
-    special_requirements: str | None = None
-    accessibility_needs: str | None = None
-    safety_concerns: str | None = None
-    time_window: str | None = None
+class UserContext(BaseModel):
+    location: str = Field(description="Desired location or area for stargazing")
+    transport: str | None = Field(default=None, description="Mode of transport (e.g. 'car', 'public transit')")
+    radius_km: float | None = Field(default=None, description="Search radius in kilometers")
+    has_telescope: bool | None = Field(default=None, description="Whether the user has a telescope")
+    fear_of_wildlife: bool | None = Field(default=None, description="Whether the user is afraid of wildlife")
+    special_requirements: str | None = Field(default=None, description="Any other special requirements")
+    accessibility_needs: str | None = Field(default=None, description="Accessibility needs or physical limitations")
+    safety_concerns: str | None = Field(default=None, description="Specific safety concerns")
+    time_window: str | None = Field(default=None, description="Preferred time window or date for stargazing")
 
 
-@dataclass
-class Recommendation:
-    spot: StargazingSpot
-    weather: WeatherReport | None = None
-    suitability_score: float = 0.0
-    notes: str | None = None
+class Recommendation(BaseModel):
+    spot: StargazingSpot = Field(description="The recommended stargazing spot")
+    weather: WeatherReport | None = Field(default=None, description="Weather report for this spot")
+    suitability_score: float = Field(default=0.0, description="Calculated suitability score")
+    notes: str | None = Field(default=None, description="Specific notes or recommendations for the user")

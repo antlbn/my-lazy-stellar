@@ -227,15 +227,28 @@ class WeatherCapability(AbstractCapability[None]):
         @toolset.tool
         def get_astro_weather(
             ctx: RunContext[None], name: str, latitude: float, longitude: float, timezone_offset: float
-        ) -> WeatherReport | None:
+        ) -> WeatherReport | str:
             """Fetch astronomy weather (cloud cover, transparency) for a specific coordinate.
             `timezone_offset` is the UTC offset in hours for the coordinate location.
+            
+            Returns:
+                WeatherReport: The weather report with night-time stargazing conditions.
+                str: An error message if coordinates are invalid, the API call failed, or no data was returned.
             """
-            return self._weather(
-                name=name,
-                latitude=latitude,
-                longitude=longitude,
-                timezone_offset=timezone_offset,
-            )
+            if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+                return f"Error: Invalid coordinates lat={latitude}, lon={longitude}. Latitude must be between -90 and 90, longitude between -180 and 180."
+
+            try:
+                report = self._weather(
+                    name=name,
+                    latitude=latitude,
+                    longitude=longitude,
+                    timezone_offset=timezone_offset,
+                )
+                if report is None:
+                    return f"Error: Weather data not available for '{name}' ({latitude}, {longitude}). The API may be down, or no night-time forecast points were found."
+                return report
+            except Exception as e:
+                return f"Error: Failed to retrieve weather due to an unexpected error: {e}"
 
         return toolset
