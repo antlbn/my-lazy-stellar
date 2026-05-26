@@ -7,7 +7,8 @@ from pydantic_ai import FunctionToolset, RunContext
 from pydantic_ai.capabilities import AbstractCapability
 from pydantic_ai.toolsets import AgentToolset
 
-from core.models import WeatherReport
+from concurrent.futures import ThreadPoolExecutor
+from core.models import LocationQuery, WeatherReport
 
 logger = logging.getLogger(__name__)
 
@@ -226,29 +227,43 @@ class WeatherCapability(AbstractCapability[None]):
 
         @toolset.tool
         def get_astro_weather(
-            ctx: RunContext[None], name: str, latitude: float, longitude: float, timezone_offset: float
-        ) -> WeatherReport | str:
-            """Fetch astronomy weather (cloud cover, transparency) for a specific coordinate.
-            `timezone_offset` is the UTC offset in hours for the coordinate location.
-            
-            Returns:
-                WeatherReport: The weather report with night-time stargazing conditions.
-                str: An error message if coordinates are invalid, the API call failed, or no data was returned.
-            """
-            if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-                return f"Error: Invalid coordinates lat={latitude}, lon={longitude}. Latitude must be between -90 and 90, longitude between -180 and 180."
+            ctx: RunContext[None],
+            locations: list[LocationQuery],
+        ) -> dict[str, WeatherReport | str]:
+            """Fetch astronomy weather (cloud cover, transparency, seeing, wind, temp) for multiple locations.
 
-            try:
-                report = self._weather(
-                    name=name,
-                    latitude=latitude,
-                    longitude=longitude,
-                    timezone_offset=timezone_offset,
-                )
-                if report is None:
-                    return f"Error: Weather data not available for '{name}' ({latitude}, {longitude}). The API may be down, or no night-time forecast points were found."
-                return report
-            except Exception as e:
-                return f"Error: Failed to retrieve weather due to an unexpected error: {e}"
+            This tool fetches night-time stargazing weather parameters for all requested locations in parallel.
+
+            Args:
+                locations: A list of locations containing name, latitude, longitude, and timezone_offset.
+
+            Returns:
+                dict[str, WeatherReport | str]: A dictionary mapping each location name to its WeatherReport or an error message string.
+            """
+            results = {}
+
+            def _fetch_one(loc: LocationQuery) -> tuple[str, WeatherReport | str]:
+                if not (-90 <= loc.latitude <= 90) or not (-180 <= loc.longitude <= 180):
+                    return loc.name, f"Error: Invalid coordinates lat={loc.latitude}, lon={loc.longitude}. Latitude must be between -90 and 90, longitude between -180 and 180."
+
+                try:
+                    report = self._weather(
+                        name=loc.name,
+                        latitude=loc.latitude,
+                        longitude=loc.longitude,
+                        timezone_offset=loc.timezone_offset,
+                    )
+                    if report is None:
+                        return loc.name, f"Error: Weather data not available for '{loc.name}'. The API may be down, or no night-time forecast points were found."
+                    return loc.name, report
+                except Exception as e:
+                    return loc.name, f"Error: Failed to retrieve weather: {e}"
+
+            # Fetch weather for all locations in parallel using a thread pool
+            with ThreadPoolExecutor(max_workers=min(len(locations), 10)) as executor:
+                for name, res in executor.map(_fetch_one, locations):
+                    results[name] = res
+
+            return results
 
         return toolset

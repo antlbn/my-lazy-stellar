@@ -15,6 +15,14 @@ class StargazingSpot(BaseModel):
     seasonal_nature_risks: str | None = Field(default=None, description="Seasonal nature risks (snow blocks, high tides, etc.)")
 
 
+# model for location query for weather tool 
+class LocationQuery(BaseModel):
+    name: str = Field(description="Name of the location")
+    latitude: float = Field(description="Latitude coordinate")
+    longitude: float = Field(description="Longitude coordinate")
+    timezone_offset: float = Field(description="UTC timezone offset in hours for the location")
+
+
 class WeatherReport(BaseModel):
     """Прогноз погоды с шагом 3 часа.
 
