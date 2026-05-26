@@ -1,4 +1,6 @@
+from __future__ import annotations
 from pydantic import BaseModel, Field
+
 
 class StargazingSpot(BaseModel):
     name: str = Field(description="Name of the stargazing spot")
@@ -13,8 +15,6 @@ class StargazingSpot(BaseModel):
     additional_info: str | None = Field(default=None, description="Any other additional info")
     time_of_discovery: str | None = Field(default=None, description="When the spot was discovered/logged")
     seasonal_nature_risks: str | None = Field(default=None, description="Seasonal nature risks (snow blocks, high tides, etc.)")
-
-
 
 
 class UserContext(BaseModel):

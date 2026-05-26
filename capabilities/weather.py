@@ -180,10 +180,6 @@ def default_weather_fn(
 
     Возвращает только ночное окно (~21:00–09:00 по местному времени).
     """
-    if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-        logger.warning("Невалидные координаты: lat=%s, lon=%s", latitude, longitude)
-        return None
-
     now = now or datetime.now(timezone.utc)
 
     raw = fetch_astro_raw(latitude, longitude, client)
@@ -230,9 +226,7 @@ class WeatherCapability(AbstractCapability[None]):
             results = {}
 
             def _fetch_one(loc: LocationQuery) -> tuple[str, WeatherReport | str]:
-                if not (-90 <= loc.latitude <= 90) or not (-180 <= loc.longitude <= 180):
-                    return loc.name, f"Error: Invalid coordinates lat={loc.latitude}, lon={loc.longitude}. Latitude must be between -90 and 90, longitude between -180 and 180."
-
+                
                 try:
                     report = self._weather(
                         name=loc.name,
