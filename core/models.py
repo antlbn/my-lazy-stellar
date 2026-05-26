@@ -91,16 +91,16 @@ class WeatherReport(BaseModel):
     """
 
     name: str | None = Field(default=None, description="Name of the location")
-    latitude: float = Field(default=0.0, description="Latitude coordinate", ge=-90, le=90)
-    longitude: float = Field(default=0.0, description="Longitude coordinate", ge=-180, le=180)
+    latitude: float = Field(description="Latitude coordinate", ge=-90, le=90)
+    longitude: float = Field(description="Longitude coordinate", ge=-180, le=180)
 
-    # --- Почасовые прогнозы для ночного окна ---
+    # Hourly forecasts for the night time window
     forecasts: list[HourlyForecast] = Field(
         default_factory=list,
         description="List of hourly forecasts for the night-time windows."
     )
 
-    # --- Метаданные ---
+    # --- Metadata ---
     sunset_time: str | None = Field(default=None, description="Sunset time, if available")
     sunrise_time: str | None = Field(default=None, description="Sunrise time, if available")
     special_description: str | None = Field(default=None, description="Special description or alerts")
@@ -110,14 +110,6 @@ class WeatherReport(BaseModel):
     # Methods that can be usefull further for evaluating the weather for the night. 
     # ------------------------------------------------------------------
 
-    def cloud_cover_now(self) -> int:
-        """Облачность первой точки прогноза (1=ясно, 9=пасмурно)."""
-        return self.forecasts[0].cloud_cover if self.forecasts else 9
-
-    def transparency_now(self) -> int:
-        """Прозрачность первой точки прогноза."""
-        return self.forecasts[0].transparency if self.forecasts else 1
-
-    def seeing_now(self) -> int:
-        """Сиинг первой точки прогноза."""
-        return self.forecasts[0].seeing if self.forecasts else 1
+    def first_forecast(self) -> HourlyForecast | None:
+       """returns first forecast from forecasts list"""
+       return self.forecasts[0] if self.forecasts else None
