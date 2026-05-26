@@ -10,7 +10,7 @@ class StargazingSpot(BaseModel):
     description: str = Field(description="Description of the spot, including highlights or unique features")
     accessibility: str = Field(description="Details on how to access the spot (road quality, walking required)")
     safety_assessment: str = Field(description="Safety assessment of the location (wildlife, steep drops, etc.)")
-    timezone_offset: float | None = Field(default=0.0, description="UTC timezone offset in hours")
+    timezone_offset: float = Field(description="UTC timezone offset in hours")
     bortle_class: int | None = Field(default=None, description="Bortle Dark Sky Scale (1-9), where 1 is the darkest")
     additional_info: str | None = Field(default=None, description="Any other additional info")
     time_of_discovery: str | None = Field(default=None, description="When the spot was discovered/logged")
