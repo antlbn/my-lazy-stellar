@@ -3,6 +3,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta, timezone
 from types import TracebackType
+from typing import Any
 
 import httpx
 from pydantic_ai import FunctionToolset, RunContext
@@ -203,7 +204,7 @@ def default_weather_fn(
 
 # ── Capability for Agent ─────────────────────────────────────────────────────
 
-class WeatherCapability(AbstractCapability[None]):
+class WeatherCapability(AbstractCapability[Any]):
     """Capability that provides astronomical weather forecasts for stargazing.
 
     Owns an httpx.Client for the duration of its lifetime.
@@ -250,12 +251,12 @@ class WeatherCapability(AbstractCapability[None]):
     def get_serialization_name(cls) -> str | None:
         return None
 
-    def get_toolset(self) -> AgentToolset[None]:
-        toolset = FunctionToolset[None]()
+    def get_toolset(self) -> AgentToolset[Any]:
+        toolset = FunctionToolset[Any]()
 
         @toolset.tool
         def get_astro_weather(
-            ctx: RunContext[None],
+            ctx: RunContext[Any],
             locations: list[LocationQuery],
         ) -> dict[str, WeatherReport | str]:
             """Fetch astronomy weather (cloud cover, transparency, seeing, wind, temp) for multiple locations.

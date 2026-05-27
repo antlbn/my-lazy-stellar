@@ -80,7 +80,7 @@ def create_agent(
 from pydantic import Field
 import os
 from pydantic_ai.capabilities import WebSearch
-from core.models import StargazingSpot, WeatherReport
+from core.models import StargazingSpot, UserContext, WeatherReport
 
 LAZY_STELLAR_MODEL = os.getenv("LAZY_STELLAR_MODEL", "openrouter:google/gemini-3.1-flash-lite")
 
@@ -89,33 +89,40 @@ class SpotSearchReport(BaseModel):
     summary: str = Field(description="Concise user-facing answer in English.")
     spots: list[StargazingSpot] = Field(default_factory=list)
 
+class AgentRunOutput(BaseModel):
+    spot_search_report: SpotSearchReport
+    weather_reports: dict[str, WeatherReport | str]
+
+
 agent_spot_searcher = Agent(
     model=LAZY_STELLAR_MODEL,
     defer_model_check=True,
-    capabilities=[WebSearch(local=False)],
-    deps_type=None,
-    output_type=SpotSearchReport,
+    deps_type=UserContext,
+    capabilities=[
+        WebSearch(local=False),
+        WeatherCapability(),
+    ],
+    output_type=AgentRunOutput,
     instructions=(
-        "You are a stargazing assistant. Use the web search tool to find location-specific recommendations. "
-        "Summarize the returned spots in a SpotSearchReport. "
-        "If search returns an error string, return spots_found=0, spots=[], and put the error in summary. "
-        "Do not invent spots that were not returned by the tool."
-    )
+        "You are a stargazing assistant. Follow these two phases strictly:\n\n"
+        "PHASE 1 — SPOT SEARCH:\n"
+        "Use the web search tool to find stargazing spots for the user's location. "
+        "Collect at least 2-5 concrete spots with coordinates and descriptions. "
+        "Do not invent spots not returned by the tool. "
+        "If search fails, set spots_found=0, spots=[], and put the error in summary.\n\n"
+        "PHASE 2 — WEATHER RESOLUTION:\n"
+        "After collecting spots, you MUST call get_astro_weather with a LocationQuery for each found spot. "
+        "Pass name, latitude, longitude, and timezone_offset from each StargazingSpot. "
+        "You may batch all spots in a single get_astro_weather call. "
+        "Do NOT skip this step even if weather seems irrelevant.\n\n"
+        "FINAL OUTPUT:\n"
+        "Return AgentRunOutput with spot_search_report (all found spots) and weather_reports "
+        "(the dict returned by get_astro_weather, keyed by spot name)."
+    ),
 )
 
-class WeatherSummaryReport(BaseModel):
-    summary: str = Field(description="Generic summary of the weather for the requested locations.")
-    reports: list[WeatherReport] = Field(default_factory=list)
-    note: str | None = Field(default=None, description="Note on any errors or issues fetching weather.")
 
-agent_weather_resolver = Agent(
-    model=LAZY_STELLAR_MODEL,
-    defer_model_check=True,
-    output_type=WeatherSummaryReport,
-    capabilities=[WeatherCapability()],
-    instructions=(
-        "You are a weather assistant for stargazing. Use the get_astro_weather tool to get the weather report for tonight for the given locations. "
-        "Return the structured output as a WeatherSummaryReport. "
-        "If there are issues fetching weather, add a note explaining what happened."
-    )
-)
+@agent_spot_searcher.instructions
+def inject_user_context(ctx: RunContext[UserContext]) -> str:
+    """Inject structured UserContext into the prompt so the LLM has all search parameters."""
+    return f"User context:\n{ctx.deps.model_dump_json(indent=2, exclude_none=True)}"

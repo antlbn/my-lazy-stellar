@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pydantic_ai import Agent
 
 from agent import create_agent
-from capabilities.search import SearchCapability
+from pydantic_ai.capabilities import WebSearch
 from capabilities.weather import WeatherCapability
 
 from .bootstrap import configure_logfire, initialize_storage
@@ -32,7 +32,7 @@ def create_runtime(*, settings: Settings | None = None) -> Runtime:
     agent = create_agent(
         model=resolved_settings.model,
         capabilities=[
-            SearchCapability(),
+            WebSearch(local=False),
             WeatherCapability(),
         ],
     )
