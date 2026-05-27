@@ -1,29 +1,53 @@
+import os
 from collections.abc import Sequence
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.capabilities import AbstractCapability
+from pydantic_ai.capabilities import WebSearch
 
-from capabilities.weather import WeatherCapability
+from core.models import StargazingSpot, UserContext
 
 
-class SpotReport(BaseModel):
-    """Structured summary produced when the agent has found stargazing spots.
+LAZY_STELLAR_MODEL = os.getenv("LAZY_STELLAR_MODEL", "openrouter:google/gemini-3.1-flash-lite")
 
-    The agent should call ``report_spots`` only after it has gathered enough
-    context from the user AND completed the search/weather workflow.
-    During the initial clarification phase the agent must NOT call this tool —
-    it should simply respond with a plain conversational message.
-    """
+class SpotSearchReport(BaseModel):
+    spots_found: int = Field(description="Number of spots returned by the search tool.")
+    summary: str = Field(description="Concise user-facing answer in English.")
+    spots: list[StargazingSpot] = Field(default_factory=list)
 
-    spots_found: int
-    summary: str  # human-readable markdown summary for the user
+
+agent_spot_searcher = Agent(
+    model=LAZY_STELLAR_MODEL,
+    defer_model_check=True,
+    deps_type=UserContext,
+    capabilities=[
+        WebSearch(local=False),
+    ],
+    output_type=SpotSearchReport,
+    instructions=(
+        "You are a search assistant. Your ONLY job is to search for stargazing spots.\n\n"
+        "SPOT SEARCH:\n"
+        "Use the web search tool to find stargazing spots for the user's location. "
+        "Collect at least 2-5 concrete spots with coordinates and descriptions. "
+        "Do not invent spots not returned by the tool. "
+        "If search fails, set spots_found=0, spots=[], and put the error in summary.\n\n"
+        "FINAL OUTPUT:\n"
+        "Return SpotSearchReport containing the found spots."
+    ),
+)
+
+
+@agent_spot_searcher.instructions
+def inject_user_context(ctx: RunContext[UserContext]) -> str:
+    """Inject structured UserContext into the prompt so the LLM has all search parameters."""
+    return f"User context:\n{ctx.deps.model_dump_json(indent=2, exclude_none=True)}"
 
 
 # PydanticAI model strings include the provider prefix. For OpenRouter model IDs,
 # use: openrouter:<openrouter-model-id>
-DEFAULT_MODEL = "openrouter:nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+DEFAULT_MODEL = "openrouter:google/gemini-3.1-flash-lite"
 DEFAULT_SYSTEM_PROMPT = "You are Lazy Stellar, a stargazing assistant."
 
 
@@ -45,7 +69,6 @@ def create_agent(
     system_prompt: str | None = None,
 ) -> Agent[None, str]:
     # No output_type — the agent replies with plain conversational text.
-    # When it has found spots it calls the `report_spots` tool instead.
     agent: Agent[None, str] = Agent(
         model=model,
         defer_model_check=True,
@@ -58,71 +81,15 @@ def create_agent(
     def get_system_prompt() -> str:
         return prompt
 
-    @agent.tool_plain
-    def report_spots(report: SpotReport) -> str:
-        """Call this tool ONLY when you have completed the full search workflow and
-        are ready to present the final ranked list of stargazing spots to the user.
-        Do NOT call this tool to ask clarifying questions — just reply with text.
+    @agent.tool
+    async def search_spots(ctx: RunContext[None], context: UserContext) -> SpotSearchReport:
+        """Search for candidate stargazing locations using the user's preferences.
+        Call this tool in Phase 2 once you have collected the user's location and preferences.
         """
-        # The tool return value is fed back to the model as a tool result.
-        # The model will then produce its final conversational reply using it.
-        return (
-            f"[spots_found={report.spots_found}] "
-            f"Report recorded. Now present the following summary to the user:\n\n"
-            f"{report.summary}"
+        result = await agent_spot_searcher.run(
+            "Please find stargazing spots based on my context.",
+            deps=context,
         )
+        return result.output
 
-    
     return agent
-
-
-
-from pydantic import Field
-import os
-from pydantic_ai.capabilities import WebSearch
-from core.models import StargazingSpot, UserContext, WeatherReport
-
-LAZY_STELLAR_MODEL = os.getenv("LAZY_STELLAR_MODEL", "openrouter:google/gemini-3.1-flash-lite")
-
-class SpotSearchReport(BaseModel):
-    spots_found: int = Field(description="Number of spots returned by the search tool.")
-    summary: str = Field(description="Concise user-facing answer in English.")
-    spots: list[StargazingSpot] = Field(default_factory=list)
-
-class AgentRunOutput(BaseModel):
-    spot_search_report: SpotSearchReport
-    weather_reports: dict[str, WeatherReport | str]
-
-
-agent_spot_searcher = Agent(
-    model=LAZY_STELLAR_MODEL,
-    defer_model_check=True,
-    deps_type=UserContext,
-    capabilities=[
-        WebSearch(local=False),
-        WeatherCapability(),
-    ],
-    output_type=AgentRunOutput,
-    instructions=(
-        "You are a stargazing assistant. Follow these two phases strictly:\n\n"
-        "PHASE 1 — SPOT SEARCH:\n"
-        "Use the web search tool to find stargazing spots for the user's location. "
-        "Collect at least 2-5 concrete spots with coordinates and descriptions. "
-        "Do not invent spots not returned by the tool. "
-        "If search fails, set spots_found=0, spots=[], and put the error in summary.\n\n"
-        "PHASE 2 — WEATHER RESOLUTION:\n"
-        "After collecting spots, you MUST call get_astro_weather with a LocationQuery for each found spot. "
-        "Pass name, latitude, longitude, and timezone_offset from each StargazingSpot. "
-        "You may batch all spots in a single get_astro_weather call. "
-        "Do NOT skip this step even if weather seems irrelevant.\n\n"
-        "FINAL OUTPUT:\n"
-        "Return AgentRunOutput with spot_search_report (all found spots) and weather_reports "
-        "(the dict returned by get_astro_weather, keyed by spot name)."
-    ),
-)
-
-
-@agent_spot_searcher.instructions
-def inject_user_context(ctx: RunContext[UserContext]) -> str:
-    """Inject structured UserContext into the prompt so the LLM has all search parameters."""
-    return f"User context:\n{ctx.deps.model_dump_json(indent=2, exclude_none=True)}"
